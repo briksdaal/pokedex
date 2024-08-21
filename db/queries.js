@@ -2,7 +2,7 @@ import pool from './pool.js';
 import format from 'pg-format';
 
 function getAllQuery(table) {
-  return pool.query(format('SELECT * FROM %I', table));
+  return pool.query(format('SELECT * FROM %I ORDER BY id', table));
 }
 
 function getSingleByIdQuery(table, id) {
@@ -14,6 +14,11 @@ export const getAllTypesQuery = async () => {
   return rows;
 };
 
+export const getAllPokemonQuery = async () => {
+  const { rows } = await getAllQuery('pokemon');
+  return rows;
+};
+
 export const getTypeByIdAndPokemonQuery = async (id) => {
   const { rows } = await pool.query(
     format(
@@ -22,4 +27,14 @@ export const getTypeByIdAndPokemonQuery = async (id) => {
     )
   );
   return rows;
+};
+
+export const getPokemonByIdQuery = async (id) => {
+  const { rows } = await pool.query(
+    format(
+      'SELECT pokemon.id, index, name, entry, image, types_a.id AS type1id, types_a.type AS type1type, types_a.color AS type1color, types_b.id AS type2id, types_b.type AS type2type, types_b.color AS type2color FROM pokemon LEFT JOIN types types_a ON (pokemon.type1 = types_a.id) LEFT JOIN types types_b ON (pokemon.type2 = types_b.id) WHERE pokemon.id = %L',
+      id
+    )
+  );
+  return rows[0];
 };

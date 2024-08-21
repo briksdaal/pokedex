@@ -1,16 +1,30 @@
-<h1 class="text-3xl mb-4"><%= type.type %> Type</h1>
+<h1 class="text-3xl mb-4"><%= pokemon.name %></h1>
 <div class="flex flex-col gap-4">
-  <h2 class="text-xl">Type Color:</h2>
-  <div class="flex items-center gap-8">
-    <div class="w-16 h-16" style="background: #<%= type.color%>"></div>
-    <div>Color Code: #<%= type.color%></div>
+  <h2 class="text-xl">National Pokedex Index: #<%= pokemon.index %></h2>
+  <div class="w-40 h-40">
+    <img src="<%= pokemon.image || "/images/pokeball.png" %>" alt="<%= pokemon.image ? pokemon.name : "pokeball" %>">
+  </div>
+  <div class="flex flex-col gap-4">
+    <h2 class="text-xl">Types</h2>
+    <div class="flex gap-4 items-center">
+      <a href=<%= `/types/${pokemon.type1id}` %>>
+        <div class="px-4 py-2 bg-white rounded-lg" style="background: #<%= pokemon.type1color%>">
+          <h3><%= pokemon.type1type %></h3>
+        </div>
+      </a>
+      <a href=<%= `/types/${pokemon.type2id}` %>>
+        <div class="px-4 py-2 bg-white rounded-lg" style="background: #<%= pokemon.type2color%>">
+          <h3><%= pokemon.type2type %></h3>
+        </div>
+      </a>
+    </div>
+  </div>
+  <div class="flex flex-col gap-4">
+    <h2 class="text-xl">Pokedex Entry</h2>
+    <p class="text-lg"><%= pokemon.entry %></p>
   </div>
   <div class="flex gap-8">
-    <a href=<%= `/types/${type.id}/edit` %> class="text-blue-600 hover:underline">Edit</a>
-    <a href=<%= `/types/${type.id}/delete` %> class="text-blue-600 hover:underline">Delete</a>
-  </div>
-  <div>
-    <h2 class="text-xl">Water type Pokemon:</h2>
-    List to be added
+    <a href=<%= `/pokemon/${pokemon.id}/edit` %> class="text-blue-600 hover:underline">Edit</a>
+    <a href=<%= `/pokemon/${pokemon.id}/delete` %> class="text-blue-600 hover:underline">Delete</a>
   </div>
 </div>

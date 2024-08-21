@@ -1,8 +1,11 @@
 import asyncHandler from 'express-async-handler';
+import { getAllPokemonQuery, getPokemonByIdQuery } from '../db/queries.js';
 
 export const getAllPokemon = [
-  asyncHandler((req, res) => {
-    res.send('Get all pokemons');
+  asyncHandler(async (req, res) => {
+    const pokemon = await getAllPokemonQuery();
+    const locals = { title: 'Pokemon', pokemon };
+    res.render('pokemon_list', locals);
   })
 ];
 
@@ -13,9 +16,12 @@ export const createPokemon = [
 ];
 
 export const getSpecificPokemon = [
-  asyncHandler((req, res) => {
+  asyncHandler(async (req, res) => {
     const { id } = req.params;
-    res.send(`Get pokemon ${id} details`);
+    const pokemon = await getPokemonByIdQuery(id);
+    console.log(pokemon);
+    const locals = { title: pokemon.name, pokemon };
+    res.render('single_pokemon', locals);
   })
 ];
 
