@@ -4,18 +4,24 @@ import {
   createPokemon,
   getSpecificPokemon,
   updateSpecificPokemon,
-  deleteSpecificPokemon
+  deleteSpecificPokemon,
+  getCreateNewPokemon,
+  getUpdatePokemon
 } from '../controllers/pokemonController.js';
 
 const pokemonRouter = express.Router();
 
 pokemonRouter.get('/', getAllPokemon);
 
+pokemonRouter.get('/new', getCreateNewPokemon);
+
 pokemonRouter.post('/', createPokemon);
 
 pokemonRouter.get('/:id', getSpecificPokemon);
 
-pokemonRouter.put('/:id', updateSpecificPokemon);
+pokemonRouter.get('/:id/edit', getUpdatePokemon);
+
+pokemonRouter.post('/:id', updateSpecificPokemon);
 
 pokemonRouter.delete('/:id', deleteSpecificPokemon);
 

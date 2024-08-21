@@ -584,6 +584,10 @@ video {
   margin-right: 1rem;
 }
 
+.mt-8 {
+  margin-top: 2rem;
+}
+
 .block {
   display: block;
 }
@@ -678,6 +682,10 @@ video {
 
 .gap-8 {
   gap: 2rem;
+}
+
+.gap-36 {
+  gap: 9rem;
 }
 
 .rounded-lg {

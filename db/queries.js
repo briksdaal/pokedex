@@ -2,7 +2,7 @@ import pool from './pool.js';
 import format from 'pg-format';
 
 function getAllQuery(table) {
-  return pool.query(format('SELECT * FROM %I ORDER BY id', table));
+  return pool.query(format('SELECT * FROM %I ORDER BY index', table));
 }
 
 function getSingleByIdQuery(table, id) {
@@ -35,6 +35,11 @@ export const getAllTrainersQuery = async () => {
 
 export const getSingleTypeQuery = async (id) => {
   const { rows } = await getSingleByIdQuery('types', id);
+  return rows;
+};
+
+export const getSinglePokemonQuery = async (id) => {
+  const { rows } = await getSingleByIdQuery('pokemon', id);
   return rows;
 };
 
@@ -77,6 +82,26 @@ export function updateTypeQuery(type, id) {
     `UPDATE types SET type = %L, color = %L WHERE id = %L`,
     type.type,
     type.color,
+    id
+  );
+
+  return pool.query(q);
+}
+
+export const createPokemonQuery = async (body) => {
+  // const processedBody = processPokemonBody(body);
+  return insertQuery(body, 'pokemon');
+};
+
+export function updatePokemonQuery(pokemon, id) {
+  console.log(pokemon);
+  const q = format(
+    `UPDATE pokemon SET index = %L, name = %L, type1 = %L, type2 = %L, entry = %L WHERE id = %L`,
+    pokemon.index,
+    pokemon.name,
+    pokemon.type1,
+    pokemon.type2,
+    pokemon.entry,
     id
   );
 
