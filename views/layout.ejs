@@ -5,10 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="/stylesheets/style.css" />
     <title>Pokedex <%= locals?.title && ` | ${title}` %></title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400;500;700&display=swap"
+      rel="stylesheet"
+    />
   </head>
-  <body class="bg-amber-300">
-    <%- include('partials/header.ejs') %>
-    <div><%- body %></div>
-    <%- include('partials/footer.ejs') %>
+  <body class="min-h-screen flex flex-col">
+    <div><%- include('partials/header.ejs') %></div>
+    <div class="flex w-full grow my-8 max-w-screen-2xl mx-auto px-8">
+      <%- body %>
+    </div>
+    <div><%- include('partials/footer.ejs') %></div>
   </body>
 </html>
