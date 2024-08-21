@@ -1,8 +1,11 @@
 import asyncHandler from 'express-async-handler';
+import { getAllTypesQuery } from '../db/queries.js';
 
 export const getAllTypes = [
-  asyncHandler((req, res) => {
-    res.send('Get all types');
+  asyncHandler(async (req, res) => {
+    const types = await getAllTypesQuery();
+    const locals = { title: 'Types', types };
+    res.render('types_list', locals);
   })
 ];
 

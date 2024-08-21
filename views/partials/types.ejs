@@ -1,0 +1,17 @@
+<% if (types?.length && types.length > 0) { %>
+    <ul class="flex flex-col gap-4">
+        <% types.forEach((t) => { %>
+            <li class="flex">
+                <a href="/types/<%= t.id %>">
+                    <div class="px-4 py-2 bg-white rounded-lg" style="background: #<%= t.color%>">
+                        <h3><%= t.type %></h3>
+                    </div>
+                </a>
+            </li>
+        <% })%>
+    </ul>
+<% } else { %>
+    <p>None defined</p>
+<% } %>
+
+
