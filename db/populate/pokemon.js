@@ -5,7 +5,8 @@ const pokemon = [
     type1: 'Grass',
     type2: 'Poison',
     entry:
-      'A strange seed was planted on its back at birth. The plant sprouts and grows with this POKéMON.'
+      'A strange seed was planted on its back at birth. The plant sprouts and grows with this POKéMON.',
+    image: '/images/bulbasaur.png'
   },
   {
     index: 4,

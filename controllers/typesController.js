@@ -1,5 +1,5 @@
 import asyncHandler from 'express-async-handler';
-import { getAllTypesQuery } from '../db/queries.js';
+import { getAllTypesQuery, getTypeByIdAndPokemonQuery } from '../db/queries.js';
 
 export const getAllTypes = [
   asyncHandler(async (req, res) => {
@@ -16,9 +16,18 @@ export const createType = [
 ];
 
 export const getSpecificType = [
-  asyncHandler((req, res) => {
+  asyncHandler(async (req, res) => {
     const { id } = req.params;
-    res.send(`Get type ${id} details`);
+    const queryRes = await getTypeByIdAndPokemonQuery(id);
+
+    const type = {
+      id: queryRes[0].type_id,
+      type: queryRes[0].type,
+      color: queryRes[0].color
+    };
+
+    const locals = { title: `${type.type} Type`, type, pokemon: queryRes };
+    res.render('single_type', locals);
   })
 ];
 
