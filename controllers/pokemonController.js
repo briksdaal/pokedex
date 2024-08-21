@@ -19,7 +19,6 @@ export const getSpecificPokemon = [
   asyncHandler(async (req, res) => {
     const { id } = req.params;
     const pokemon = await getPokemonByIdQuery(id);
-    console.log(pokemon);
     const locals = { title: pokemon.name, pokemon };
     res.render('single_pokemon', locals);
   })

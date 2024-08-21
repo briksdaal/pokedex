@@ -1,8 +1,11 @@
 import asyncHandler from 'express-async-handler';
+import { getAllTrainersQuery, getTrainerByIdQuery } from '../db/queries.js';
 
 export const getAllTrainers = [
-  asyncHandler((req, res) => {
-    res.send('Get all trainers');
+  asyncHandler(async (req, res) => {
+    const trainers = await getAllTrainersQuery();
+    const locals = { title: 'Trainers', trainers };
+    res.render('trainers_list', locals);
   })
 ];
 
@@ -13,9 +16,22 @@ export const createTrainer = [
 ];
 
 export const getSpecificTrainer = [
-  asyncHandler((req, res) => {
+  asyncHandler(async (req, res) => {
     const { id } = req.params;
-    res.send(`Get trainer ${id} details`);
+    const queryRes = await getTrainerByIdQuery(id);
+
+    const trainer = {
+      id: queryRes[0].trainer_id,
+      name: queryRes[0].trainer_name,
+      image: queryRes[0].trainer_image
+    };
+
+    const locals = {
+      title: `Trainer ${trainer.name}`,
+      trainer,
+      pokemon: queryRes
+    };
+    res.render('single_trainer', locals);
   })
 ];
 

@@ -1,0 +1,14 @@
+<h1 class="text-3xl mb-4"><%= trainer.name %></h1>
+<div class="flex flex-col gap-4">
+  <div class="flex justify-center w-40 h-40">
+    <img src="<%= trainer.image || "/images/trainer.png" %>" alt="<%= trainer.image ? trainer.name : "trainer" %>" class="object-contain">
+  </div>
+  <div class="flex flex-col gap-4">
+    <h2 class="text-xl"><%= trainer.name %>'s Pokemon</h2>
+    <%- include('partials/pokemon', {pokemon: pokemon}) %>
+  </div>
+  <div class="flex gap-8">
+    <a href=<%= `/trainers/${trainer.id}/edit` %> class="text-blue-600 hover:underline">Edit</a>
+    <a href=<%= `/trainers/${trainer.id}/delete` %> class="text-blue-600 hover:underline">Delete</a>
+  </div>
+</div>

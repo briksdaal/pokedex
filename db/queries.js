@@ -19,6 +19,11 @@ export const getAllPokemonQuery = async () => {
   return rows;
 };
 
+export const getAllTrainersQuery = async () => {
+  const { rows } = await getAllQuery('trainers');
+  return rows;
+};
+
 export const getTypeByIdAndPokemonQuery = async (id) => {
   const { rows } = await pool.query(
     format(
@@ -37,4 +42,14 @@ export const getPokemonByIdQuery = async (id) => {
     )
   );
   return rows[0];
+};
+
+export const getTrainerByIdQuery = async (id) => {
+  const { rows } = await pool.query(
+    format(
+      'SELECT trainers.id AS trainer_id, trainers.name AS trainer_name, trainers.image AS trainer_image, pokemon.id, pokemon.name, pokemon.image FROM trainers LEFT JOIN pokemon_trainers ON (trainers.id = pokemon_trainers.trainer_id) LEFT JOIN pokemon ON (pokemon.id = pokemon_trainers.pokemon_id) WHERE trainers.id = %L',
+      id
+    )
+  );
+  return rows;
 };

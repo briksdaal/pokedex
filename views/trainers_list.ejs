@@ -1,0 +1,21 @@
+<h1 class="text-3xl mb-4">Trainers List</h1>
+<% if (trainers?.length && trainers.length > 0) { %>
+    <ul class="flex flex-col gap-4">
+        <% trainers.forEach((t) => { %>
+            <li class="flex">
+                <a href="/trainers/<%= t.id %>" class="text-blue-600 hover:underline">
+                    <div class="flex gap-2 items-center">
+                        <div class="flex w-8 h-10 p-1 justify-center">
+                            <img src="<%= t.image || "/images/trainer.png" %>" alt="<%= t.image ? t.name : "trainer" %>" class="object-contain">
+                        </div>
+                        <h3><%= t.name %></h3>
+                    </div>
+                </a>
+            </li>
+        <% })%>
+    </ul>
+<% } else { %>
+    <p>None defined</p>
+<% } %>
+
+

@@ -1,6 +1,7 @@
 const trainers = [
   {
-    name: 'Ash'
+    name: 'Ash',
+    image: '/images/ash.jpg'
   },
   {
     name: 'Gary'
