@@ -10,7 +10,7 @@ export const getAllPokemon = [
 ];
 
 export const createPokemon = [
-  asyncHandler((req, res) => {
+  asyncHandler(async (req, res) => {
     res.send(`Create new pokemon`);
   })
 ];

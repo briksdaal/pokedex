@@ -9,6 +9,15 @@ function getSingleByIdQuery(table, id) {
   return pool.query(format('SELECT * FROM %I WHERE id = %L', table, id));
 }
 
+function insertQuery(object, table) {
+  const keys = Object.keys(object).join();
+  const values = Object.values(object);
+
+  const q = format(`INSERT INTO %I (%s) VALUES (%L)`, table, keys, values);
+
+  return pool.query(q);
+}
+
 export const getAllTypesQuery = async () => {
   const { rows } = await getAllQuery('types');
   return rows;
@@ -24,10 +33,15 @@ export const getAllTrainersQuery = async () => {
   return rows;
 };
 
+export const getSingleTypeQuery = async (id) => {
+  const { rows } = await getSingleByIdQuery('types', id);
+  return rows;
+};
+
 export const getTypeByIdAndPokemonQuery = async (id) => {
   const { rows } = await pool.query(
     format(
-      'SELECT types.id AS type_id, type, color, pokemon.id, name, image FROM types JOIN pokemon ON (pokemon.type1 = types.id OR pokemon.type2 = types.id) WHERE types.id = %L',
+      'SELECT types.id AS type_id, type, color, pokemon.id, name, image FROM types LEFT JOIN pokemon ON (pokemon.type1 = types.id OR pokemon.type2 = types.id) WHERE types.id = %L',
       id
     )
   );
@@ -53,3 +67,18 @@ export const getTrainerByIdQuery = async (id) => {
   );
   return rows;
 };
+
+export const createTypeQuery = async (body) => {
+  return insertQuery(body, 'types');
+};
+
+export function updateTypeQuery(type, id) {
+  const q = format(
+    `UPDATE types SET type = %L, color = %L WHERE id = %L`,
+    type.type,
+    type.color,
+    id
+  );
+
+  return pool.query(q);
+}

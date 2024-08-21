@@ -1,6 +1,8 @@
 import express from 'express';
 import {
   getAllTypes,
+  getCreateNewType,
+  getUpdateType,
   createType,
   getSpecificType,
   updateSpecificType,
@@ -11,11 +13,15 @@ const typesRouter = express.Router();
 
 typesRouter.get('/', getAllTypes);
 
+typesRouter.get('/new', getCreateNewType);
+
 typesRouter.post('/', createType);
 
 typesRouter.get('/:id', getSpecificType);
 
-typesRouter.put('/:id', updateSpecificType);
+typesRouter.get('/:id/edit', getUpdateType);
+
+typesRouter.post('/:id', updateSpecificType);
 
 typesRouter.delete('/:id', deleteSpecificType);
 

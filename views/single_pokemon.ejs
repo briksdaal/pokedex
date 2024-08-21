@@ -1,4 +1,4 @@
-<h1 class="text-3xl mb-4"><%= pokemon.name %></h1>
+<h1 class="text-3xl mb-8"><%= pokemon.name %></h1>
 <div class="flex flex-col gap-4">
   <h2 class="text-xl">National Pokedex Index: #<%= pokemon.index %></h2>
   <div class="w-40 h-40">
@@ -7,16 +7,25 @@
   <div class="flex flex-col gap-4">
     <h2 class="text-xl">Types</h2>
     <div class="flex gap-4 items-center">
-      <a href=<%= `/types/${pokemon.type1id}` %>>
-        <div class="px-4 py-2 bg-white rounded-lg" style="background: #<%= pokemon.type1color%>">
-          <h3><%= pokemon.type1type %></h3>
-        </div>
-      </a>
-      <a href=<%= `/types/${pokemon.type2id}` %>>
-        <div class="px-4 py-2 bg-white rounded-lg" style="background: #<%= pokemon.type2color%>">
-          <h3><%= pokemon.type2type %></h3>
-        </div>
-      </a>
+      <% if (pokemon.type1id || pokemon.type2id) { %>
+        <% if (pokemon.type1id) { %>
+          <a href=<%= `/types/${pokemon.type1id}` %>>
+            <div class="px-4 py-2 bg-white rounded-lg" style="background: #<%= pokemon.type1color%>">
+              <h3><%= pokemon.type1type %></h3>
+            </div>
+          </a>
+        <% } %>
+        <% if (pokemon.type2id) { %>
+        <a href=<%= `/types/${pokemon.type2id}` %>>
+          <div class="px-4 py-2 bg-white rounded-lg" style="background: #<%= pokemon.type2color%>">
+            <h3><%= pokemon.type2type %></h3>
+          </div>
+        </a>
+        <% } %>
+      <% } else { %>
+        <h3>No Types Defined</h3>
+      <% } %>
+      
     </div>
   </div>
   <div class="flex flex-col gap-4">
