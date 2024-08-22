@@ -1,0 +1,7 @@
+<h1 class="text-3xl mb-4"><%= locals?.status || 500 %> Error</h1>
+<h2 class="text-2xl mb-4">
+  <%= locals?.message ? message : 'Something went wrong...' %>
+</h2>
+<% if (locals?.error?.stack) { %>
+    <pre class="text-xl"><%= error.stack %></pre>
+<% } %>

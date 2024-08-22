@@ -39,8 +39,14 @@ app.use((req, res, next) => {
 
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
-  res.status(err.status || 500);
-  res.send({ errors: err.message });
+  const locals = {
+    status: err.status || 500,
+    message: err.message || 'Something went wrong...'
+  };
+
+  locals.error = req.app.get('env') === 'development' ? err : null;
+
+  res.render('error_page', locals);
 });
 
 const PORT = process.env.PORT || 3000;
