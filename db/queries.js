@@ -125,6 +125,10 @@ export const createTrainerQuery = async (body) => {
 };
 
 export const createPokemonTrainersQuery = async (pairs) => {
+  if (!pairs.length) {
+    return;
+  }
+
   const q = format(
     `INSERT INTO pokemon_trainers (trainer_id, pokemon_id) VALUES %L`,
     pairs
@@ -137,4 +141,35 @@ export const deletePokemonTrainersByTrainerIdQuery = async (id) => {
   const q = format(`DELETE FROM pokemon_trainers WHERE trainer_id = %L`, id);
 
   return pool.query(q);
+};
+
+export const transactionWrapper = async (queries) => {
+  try {
+    await pool.query('BEGIN');
+
+    for (const obj of queries) {
+      await obj.query(...obj.args);
+    }
+
+    await pool.query('COMMIT');
+  } catch (e) {
+    await pool.query('ROLLBACK');
+    throw e;
+  }
+};
+
+export const createTrainerAndSetPokemon = async (trainer, pokemonids) => {
+  try {
+    await pool.query('BEGIN');
+
+    const { rows } = await createTrainerQuery(trainer);
+    const trainerid = rows[0].id;
+    const pairs = pokemonids.map((p) => [trainerid, Number(p)]);
+    await createPokemonTrainersQuery(pairs);
+
+    await pool.query('COMMIT');
+  } catch (e) {
+    await pool.query('ROLLBACK');
+    throw e;
+  }
 };

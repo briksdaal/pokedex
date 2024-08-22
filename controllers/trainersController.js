@@ -3,10 +3,11 @@ import {
   getAllTrainersQuery,
   getTrainerByIdQuery,
   getAllPokemonQuery,
-  createTrainerQuery,
   createPokemonTrainersQuery,
   getSingleTrainerQuery,
-  deletePokemonTrainersByTrainerIdQuery
+  deletePokemonTrainersByTrainerIdQuery,
+  transactionWrapper,
+  createTrainerAndSetPokemon
 } from '../db/queries.js';
 import createHttpError from 'http-errors';
 import { body, validationResult } from 'express-validator';
@@ -81,11 +82,10 @@ export const createTrainer = [
       return res.render('create_update_trainer', locals);
     }
 
-    const { rows } = await createTrainerQuery({ name: req.body.name });
-    const trainerid = rows[0].id;
-    const pairs = req.body.pokemon.map((p) => [trainerid, Number(p)]);
+    const trainer = { name: req.body.name };
+    const pokemon = req.body.pokemon;
 
-    await createPokemonTrainersQuery(pairs);
+    await createTrainerAndSetPokemon(trainer, pokemon);
 
     res.redirect(`/trainers`);
   })
@@ -113,6 +113,7 @@ export const getSpecificTrainer = [
       trainer,
       pokemon: pokemon
     };
+
     res.render('single_trainer', locals);
   })
 ];
@@ -151,10 +152,16 @@ export const updateSpecificTrainer = [
 
     const pairs = req.body.pokemon.map((p) => [Number(id), Number(p)]);
 
-    await deletePokemonTrainersByTrainerIdQuery(id);
-    if (pairs.length) {
-      await createPokemonTrainersQuery(pairs);
-    }
+    await transactionWrapper([
+      {
+        query: deletePokemonTrainersByTrainerIdQuery,
+        args: [id]
+      },
+      {
+        query: createPokemonTrainersQuery,
+        args: [pairs]
+      }
+    ]);
 
     res.redirect(`/trainers/${id}`);
   })
