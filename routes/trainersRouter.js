@@ -4,18 +4,24 @@ import {
   createTrainer,
   getSpecificTrainer,
   updateSpecificTrainer,
-  deleteSpecificTrainer
+  deleteSpecificTrainer,
+  getCreateNewTrainer,
+  getUpdateTrainer
 } from '../controllers/trainersController.js';
 
 const trainersRouter = express.Router();
 
 trainersRouter.get('/', getAllTrainers);
 
+trainersRouter.get('/new', getCreateNewTrainer);
+
 trainersRouter.post('/', createTrainer);
 
 trainersRouter.get('/:id', getSpecificTrainer);
 
-trainersRouter.put('/:id', updateSpecificTrainer);
+trainersRouter.get('/:id/edit', getUpdateTrainer);
+
+trainersRouter.post('/:id', updateSpecificTrainer);
 
 trainersRouter.delete('/:id', deleteSpecificTrainer);
 

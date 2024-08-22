@@ -81,9 +81,16 @@ export const createPokemon = [
 ];
 
 export const getSpecificPokemon = [
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req, res, next) => {
     const { id } = req.params;
-    const pokemon = await getPokemonByIdQuery(id);
+    const queryRes = await getPokemonByIdQuery(id);
+
+    if (!queryRes.length) {
+      return next(createHttpError(404));
+    }
+
+    const pokemon = queryRes[0];
+
     const locals = { title: pokemon.name, pokemon };
     res.render('single_pokemon', locals);
   })

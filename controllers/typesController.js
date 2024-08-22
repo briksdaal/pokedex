@@ -60,11 +60,12 @@ export const createType = [
     req.body.color = req.body.color && req.body.color.replace('#', '');
 
     if (!errors.isEmpty()) {
-      return res.render('create_update_type', {
+      const locals = {
         title: 'Create New Type',
         type: req.body,
         errors: errors.array()
-      });
+      };
+      return res.render('create_update_type', locals);
     }
     await createTypeQuery(req.body);
     return res.redirect('/types');
@@ -115,12 +116,13 @@ export const updateSpecificType = [
     req.body.color = req.body.color && req.body.color.replace('#', '');
 
     if (!errors.isEmpty()) {
-      return res.render('create_update_type', {
+      const locals = {
         title: 'Update New Type',
         type: req.body,
         id,
         errors: errors.array()
-      });
+      };
+      return res.render('create_update_type', locals);
     }
 
     await updateTypeQuery(req.body, id);

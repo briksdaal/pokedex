@@ -1,0 +1,5 @@
+<div class="select-block max-w-screen-sm flex justify-between mb-4">
+    <%- include('select_input', {name: 'pokemon[]', noMargin: true, value: locals?.index, options: locals?.pokemon, optionsLabel: 'name' }) %>
+    <button type="button" class="release-btn text-md rounded-md px-4 py-1 font-bold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 bg-slate-400 hover:bg-slate-300 focus-visible:outline-slate-400 disabled:bg-slate-300"
+  >Release</button>
+  </div>

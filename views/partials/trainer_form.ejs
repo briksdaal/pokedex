@@ -1,0 +1,40 @@
+<div>
+  <form action="<%= locals?.id ? `/trainers/${id}` : '/trainers'%>" method="POST">
+    <%- include('text_input', {id: 'name', label: 'Name', value: locals?.trainer?.name }) %>
+    <div class="mb-8">
+      <h3 class="block text-lg mb-2">Pokemon</h3>
+        <div id="pokemon-select">
+            <% if (locals?.trainer?.caughtPokemon?.length) { %>
+              <% trainer.caughtPokemon.forEach(p => { %>
+                <%- include('select_pokemon', { index: p.pokemon_id, pokemon: locals?.pokemon} ) %>
+              <% }) %>
+            <% } %>
+          <%- include('select_pokemon', { pokemon: locals?.pokemon} ) %>
+        </div>
+        <button id="catch-new-btn" class="text-md rounded-md px-4 py-1 font-bold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 bg-sky-400 hover:bg-sky-300 focus-visible:outline-sky-400 disabled:bg-sky-300" type="button">Catch New Pokemon</button> 
+    </div>
+    <%- include('submit_button', {id: locals?.id }) %>    
+  </form>
+</div>
+<%- include('errors') %>
+
+<script>
+  const pokemon = <%- JSON.stringify(locals?.pokemon) %>;
+  
+  const pokemonSelectDiv = document.querySelector('#pokemon-select');
+  const catchNewBtn = document.querySelector("#catch-new-btn")
+
+  pokemonSelectDiv.addEventListener('click', (e) => {
+  const releaseBtn = e.target.closest('.release-btn')
+  if (releaseBtn) {
+    releaseBtn.closest('.select-block').remove();
+  }
+  })
+
+  catchNewBtn.addEventListener('click', () => {
+    const newElement = document.createElement('div');
+    newElement.innerHTML = <%- JSON.stringify(include('select_pokemon', {pokemon: locals?.pokemon})) %>;
+    pokemonSelectDiv.append(newElement)
+  })
+
+</script>

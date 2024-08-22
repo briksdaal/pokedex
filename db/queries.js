@@ -1,8 +1,8 @@
 import pool from './pool.js';
 import format from 'pg-format';
 
-function getAllQuery(table) {
-  return pool.query(format('SELECT * FROM %I ORDER BY index', table));
+function getAllQuery(table, orderBy = 'id') {
+  return pool.query(format('SELECT * FROM %I ORDER BY %s', table, orderBy));
 }
 
 function getSingleByIdQuery(table, id) {
@@ -13,7 +13,12 @@ function insertQuery(object, table) {
   const keys = Object.keys(object).join();
   const values = Object.values(object);
 
-  const q = format(`INSERT INTO %I (%s) VALUES (%L)`, table, keys, values);
+  const q = format(
+    `INSERT INTO %I (%s) VALUES (%L) RETURNING id`,
+    table,
+    keys,
+    values
+  );
 
   return pool.query(q);
 }
@@ -24,7 +29,7 @@ export const getAllTypesQuery = async () => {
 };
 
 export const getAllPokemonQuery = async () => {
-  const { rows } = await getAllQuery('pokemon');
+  const { rows } = await getAllQuery('pokemon', 'index');
   return rows;
 };
 
@@ -40,6 +45,15 @@ export const getSingleTypeQuery = async (id) => {
 
 export const getSinglePokemonQuery = async (id) => {
   const { rows } = await getSingleByIdQuery('pokemon', id);
+  return rows;
+};
+
+export const getSingleTrainerQuery = async (id) => {
+  const q = format(
+    'SELECT * FROM trainers LEFT JOIN pokemon_trainers ON (trainers.id = pokemon_trainers.trainer_id) WHERE id = %L',
+    id
+  );
+  const { rows } = await pool.query(q);
   return rows;
 };
 
@@ -60,7 +74,7 @@ export const getPokemonByIdQuery = async (id) => {
       id
     )
   );
-  return rows[0];
+  return rows;
 };
 
 export const getTrainerByIdQuery = async (id) => {
@@ -89,12 +103,10 @@ export function updateTypeQuery(type, id) {
 }
 
 export const createPokemonQuery = async (body) => {
-  // const processedBody = processPokemonBody(body);
   return insertQuery(body, 'pokemon');
 };
 
 export function updatePokemonQuery(pokemon, id) {
-  console.log(pokemon);
   const q = format(
     `UPDATE pokemon SET index = %L, name = %L, type1 = %L, type2 = %L, entry = %L WHERE id = %L`,
     pokemon.index,
@@ -107,3 +119,22 @@ export function updatePokemonQuery(pokemon, id) {
 
   return pool.query(q);
 }
+
+export const createTrainerQuery = async (body) => {
+  return insertQuery(body, 'trainers');
+};
+
+export const createPokemonTrainersQuery = async (pairs) => {
+  const q = format(
+    `INSERT INTO pokemon_trainers (trainer_id, pokemon_id) VALUES %L`,
+    pairs
+  );
+
+  return pool.query(q);
+};
+
+export const deletePokemonTrainersByTrainerIdQuery = async (id) => {
+  const q = format(`DELETE FROM pokemon_trainers WHERE trainer_id = %L`, id);
+
+  return pool.query(q);
+};

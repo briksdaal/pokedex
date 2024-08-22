@@ -1,5 +1,15 @@
 import asyncHandler from 'express-async-handler';
-import { getAllTrainersQuery, getTrainerByIdQuery } from '../db/queries.js';
+import {
+  getAllTrainersQuery,
+  getTrainerByIdQuery,
+  getAllPokemonQuery,
+  createTrainerQuery,
+  createPokemonTrainersQuery,
+  getSingleTrainerQuery,
+  deletePokemonTrainersByTrainerIdQuery
+} from '../db/queries.js';
+import createHttpError from 'http-errors';
+import { body, validationResult } from 'express-validator';
 
 export const getAllTrainers = [
   asyncHandler(async (req, res) => {
@@ -9,16 +19,86 @@ export const getAllTrainers = [
   })
 ];
 
+export const getCreateNewTrainer = [
+  asyncHandler(async (req, res) => {
+    const pokemon = await getAllPokemonQuery();
+    const locals = { title: 'Create New Trainer', pokemon };
+    res.render('create_update_trainer', locals);
+  })
+];
+
+export const getUpdateTrainer = [
+  asyncHandler(async (req, res, next) => {
+    const { id } = req.params;
+
+    const pokemon = await getAllPokemonQuery();
+    const queryRes = await getSingleTrainerQuery(id);
+
+    if (!queryRes.length) {
+      return next(createHttpError(404));
+    }
+
+    const trainer = {
+      name: queryRes[0].name,
+      caughtPokemon: queryRes
+        .map((p) => ({
+          pokemon_id: p.pokemon_id
+        }))
+        .filter((p) => p.pokemon_id)
+    };
+
+    const locals = { title: 'Update Trainer', trainer, id, pokemon };
+    res.render('create_update_trainer', locals);
+  })
+];
+
 export const createTrainer = [
-  asyncHandler((req, res) => {
-    res.send(`Create new trainer`);
+  (req, res, next) => {
+    req.body.pokemon = Array.isArray(req.body.pokemon)
+      ? req.body.pokemon.filter((p) => p)
+      : [];
+    next();
+  },
+  body('name').trim().notEmpty().withMessage('Name must not be empty').escape(),
+  body('pokemon.*').trim().escape(),
+  asyncHandler(async (req, res) => {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      const pokemon = await getAllPokemonQuery();
+      const locals = {
+        title: 'Create New Trainer',
+        pokemon,
+        trainer: {
+          name: req.body.name,
+          caughtPokemon: req.body.pokemon.map((p) => ({
+            pokemon_id: Number(p)
+          }))
+        },
+        errors: errors.array()
+      };
+
+      return res.render('create_update_trainer', locals);
+    }
+
+    const { rows } = await createTrainerQuery({ name: req.body.name });
+    const trainerid = rows[0].id;
+    const pairs = req.body.pokemon.map((p) => [trainerid, Number(p)]);
+
+    await createPokemonTrainersQuery(pairs);
+
+    res.redirect(`/trainers`);
   })
 ];
 
 export const getSpecificTrainer = [
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req, res, next) => {
     const { id } = req.params;
     const queryRes = await getTrainerByIdQuery(id);
+
+    if (!queryRes.length) {
+      return next(createHttpError(404));
+    }
 
     const trainer = {
       id: queryRes[0].trainer_id,
@@ -26,19 +106,57 @@ export const getSpecificTrainer = [
       image: queryRes[0].trainer_image
     };
 
+    const pokemon = queryRes.filter((p) => p.id);
+
     const locals = {
       title: `Trainer ${trainer.name}`,
       trainer,
-      pokemon: queryRes
+      pokemon: pokemon
     };
     res.render('single_trainer', locals);
   })
 ];
 
 export const updateSpecificTrainer = [
-  asyncHandler((req, res) => {
+  (req, res, next) => {
+    req.body.pokemon = Array.isArray(req.body.pokemon)
+      ? req.body.pokemon.filter((p) => p)
+      : [];
+    next();
+  },
+  body('name').trim().notEmpty().withMessage('Name must not be empty').escape(),
+  body('pokemon.*').trim().escape(),
+  asyncHandler(async (req, res) => {
     const { id } = req.params;
-    res.send(`Update trainer ${id} details`);
+
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      const pokemon = await getAllPokemonQuery();
+      const locals = {
+        title: 'Update Trainer',
+        pokemon,
+        trainer: {
+          name: req.body.name,
+          caughtPokemon: req.body.pokemon.map((p) => ({
+            pokemon_id: Number(p)
+          }))
+        },
+        id,
+        errors: errors.array()
+      };
+
+      return res.render('create_update_trainer', locals);
+    }
+
+    const pairs = req.body.pokemon.map((p) => [Number(id), Number(p)]);
+
+    await deletePokemonTrainersByTrainerIdQuery(id);
+    if (pairs.length) {
+      await createPokemonTrainersQuery(pairs);
+    }
+
+    res.redirect(`/trainers/${id}`);
   })
 ];
 
