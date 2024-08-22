@@ -6,6 +6,7 @@ import {
   createPokemonTrainersQuery,
   getSingleTrainerQuery,
   deletePokemonTrainersByTrainerIdQuery,
+  getSingleTrainerByNameQuery,
   transactionWrapper,
   createTrainerAndSetPokemon
 } from '../db/queries.js';
@@ -60,7 +61,18 @@ export const createTrainer = [
       : [];
     next();
   },
-  body('name').trim().notEmpty().withMessage('Name must not be empty').escape(),
+  body('name')
+    .trim()
+    .notEmpty()
+    .withMessage('Name must not be empty')
+    .custom(async (value) => {
+      const { rows } = await getSingleTrainerByNameQuery(value);
+
+      if (rows.length) {
+        throw new Error('Trainer name must be unique');
+      }
+    })
+    .escape(),
   body('pokemon.*').trim().escape(),
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
@@ -125,7 +137,19 @@ export const updateSpecificTrainer = [
       : [];
     next();
   },
-  body('name').trim().notEmpty().withMessage('Name must not be empty').escape(),
+  body('name')
+    .trim()
+    .notEmpty()
+    .withMessage('Name must not be empty')
+    .custom(async (value, { req }) => {
+      const { id } = req.params;
+      const { rows } = await getSingleTrainerByNameQuery(value);
+
+      if (rows.length && rows[0].id !== Number(id)) {
+        throw new Error('Trainer name must be unique');
+      }
+    })
+    .escape(),
   body('pokemon.*').trim().escape(),
   asyncHandler(async (req, res) => {
     const { id } = req.params;

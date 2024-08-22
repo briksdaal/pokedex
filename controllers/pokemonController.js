@@ -5,7 +5,9 @@ import {
   getAllTypesQuery,
   createPokemonQuery,
   updatePokemonQuery,
-  getSinglePokemonQuery
+  getSinglePokemonQuery,
+  getSinglePokemonByNameQuery,
+  getSinglePokemonByIndexQuery
 } from '../db/queries.js';
 import { body, validationResult, checkExact } from 'express-validator';
 import createHttpError from 'http-errors';
@@ -51,15 +53,40 @@ export const createPokemon = [
     .withMessage('Name must not be empty')
     .isAlpha()
     .withMessage('Name must contain only letters and no spaces')
+    .custom(async (value) => {
+      const { rows } = await getSinglePokemonByNameQuery(value);
+
+      if (rows.length) {
+        throw new Error('Pokemon name must be unique');
+      }
+    })
     .escape(),
   body('index')
     .trim()
     .isNumeric()
     .withMessage('National index # must be a number')
+    .custom(async (value) => {
+      if (!value) {
+        return;
+      }
+
+      const { rows } = await getSinglePokemonByIndexQuery(value);
+
+      if (rows.length) {
+        throw new Error('National index # must be unique');
+      }
+    })
     .escape(),
   body('entry').optional().trim().escape(),
   body('type1').optional().trim().escape(),
-  body('type2').optional().trim().escape(),
+  body('type2')
+    .optional()
+    .custom((value, { req }) => {
+      return (!value && !req.body.type1) || value !== req.body.type1;
+    })
+    .withMessage('Type 1 and type 2 must be different')
+    .trim()
+    .escape(),
   checkExact([], { message: 'Unknown fields in request' }),
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
@@ -103,15 +130,42 @@ export const updateSpecificPokemon = [
     .withMessage('Name must not be empty')
     .isAlpha()
     .withMessage('Name must contain only letters and no spaces')
+    .custom(async (value, { req }) => {
+      const { id } = req.params;
+      const { rows } = await getSinglePokemonByNameQuery(value);
+
+      if (rows.length && rows[0].id !== Number(id)) {
+        throw new Error('Pokemon name must be unique');
+      }
+    })
     .escape(),
   body('index')
     .trim()
     .isNumeric()
     .withMessage('National index # must be a number')
+    .custom(async (value, { req }) => {
+      if (!value) {
+        return;
+      }
+
+      const { id } = req.params;
+      const { rows } = await getSinglePokemonByIndexQuery(value);
+
+      if (rows.length && rows[0].id !== Number(id)) {
+        throw new Error('Pokedex index # must be unique');
+      }
+    })
     .escape(),
   body('entry').optional().trim().escape(),
   body('type1').optional().trim().escape(),
-  body('type2').optional().trim().escape(),
+  body('type2')
+    .optional()
+    .custom((value, { req }) => {
+      return (!value && !req.body.type1) || value !== req.body.type1;
+    })
+    .withMessage('Type 1 and type 2 must be different')
+    .trim()
+    .escape(),
   checkExact([], { message: 'Unknown fields in request' }),
   asyncHandler(async (req, res) => {
     const { id } = req.params;

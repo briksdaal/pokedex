@@ -3,6 +3,7 @@ import { body, checkExact, validationResult } from 'express-validator';
 import {
   getAllTypesQuery,
   getSingleTypeQuery,
+  getSingleTypeByTypeQuery,
   getTypeByIdAndPokemonQuery,
   createTypeQuery,
   updateTypeQuery
@@ -47,6 +48,12 @@ export const createType = [
     .withMessage('Type must not be empty')
     .isAlpha()
     .withMessage('Type must contain only letters and no spaces')
+    .custom(async (value) => {
+      const { rows } = await getSingleTypeByTypeQuery(value);
+      if (rows.length) {
+        throw new Error('Types must be unique');
+      }
+    })
     .escape(),
   body('color')
     .trim()
@@ -101,6 +108,14 @@ export const updateSpecificType = [
     .withMessage('Type must not be empty')
     .isAlpha()
     .withMessage('Type must contain only letters and no spaces')
+    .custom(async (value, { req }) => {
+      const { id } = req.params;
+      const { rows } = await getSingleTypeByTypeQuery(value);
+
+      if (rows.length && rows[0].id !== Number(id)) {
+        throw new Error('Types must be unique');
+      }
+    })
     .escape(),
   body('color')
     .trim()
@@ -117,7 +132,7 @@ export const updateSpecificType = [
 
     if (!errors.isEmpty()) {
       const locals = {
-        title: 'Update New Type',
+        title: 'Update Type',
         type: req.body,
         id,
         errors: errors.array()

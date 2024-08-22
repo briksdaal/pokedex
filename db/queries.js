@@ -5,8 +5,18 @@ function getAllQuery(table, orderBy = 'id') {
   return pool.query(format('SELECT * FROM %I ORDER BY %s', table, orderBy));
 }
 
+function getSingleByColVal(table, col = 'id', val) {
+  const q = format('SELECT * FROM %I WHERE %s = %L', table, col, val);
+
+  return pool.query(q);
+}
+
+function getSingleByNameQuery(table, name) {
+  return getSingleByColVal(table, 'name', name);
+}
+
 function getSingleByIdQuery(table, id) {
-  return pool.query(format('SELECT * FROM %I WHERE id = %L', table, id));
+  return getSingleByColVal(table, 'id', id);
 }
 
 function insertQuery(object, table) {
@@ -41,6 +51,22 @@ export const getAllTrainersQuery = async () => {
 export const getSingleTypeQuery = async (id) => {
   const { rows } = await getSingleByIdQuery('types', id);
   return rows;
+};
+
+export const getSingleTypeByTypeQuery = async (type) => {
+  return getSingleByColVal('types', 'type', type);
+};
+
+export const getSingleTrainerByNameQuery = (name) => {
+  return getSingleByNameQuery('trainers', name);
+};
+
+export const getSinglePokemonByNameQuery = (name) => {
+  return getSingleByNameQuery('pokemon', name);
+};
+
+export const getSinglePokemonByIndexQuery = (index) => {
+  return getSingleByColVal('pokemon', 'index', index);
 };
 
 export const getSinglePokemonQuery = async (id) => {
