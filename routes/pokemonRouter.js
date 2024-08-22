@@ -15,13 +15,13 @@ pokemonRouter.get('/', getAllPokemon);
 
 pokemonRouter.get('/new', getCreateNewPokemon);
 
-pokemonRouter.post('/', createPokemon);
+pokemonRouter.post('/new', createPokemon);
 
 pokemonRouter.get('/:id', getSpecificPokemon);
 
 pokemonRouter.get('/:id/edit', getUpdatePokemon);
 
-pokemonRouter.post('/:id', updateSpecificPokemon);
+pokemonRouter.post('/:id/edit', updateSpecificPokemon);
 
 pokemonRouter.delete('/:id', deleteSpecificPokemon);
 

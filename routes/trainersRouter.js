@@ -15,13 +15,13 @@ trainersRouter.get('/', getAllTrainers);
 
 trainersRouter.get('/new', getCreateNewTrainer);
 
-trainersRouter.post('/', createTrainer);
+trainersRouter.post('/new', createTrainer);
 
 trainersRouter.get('/:id', getSpecificTrainer);
 
 trainersRouter.get('/:id/edit', getUpdateTrainer);
 
-trainersRouter.post('/:id', updateSpecificTrainer);
+trainersRouter.post('/:id/edit', updateSpecificTrainer);
 
 trainersRouter.delete('/:id', deleteSpecificTrainer);
 

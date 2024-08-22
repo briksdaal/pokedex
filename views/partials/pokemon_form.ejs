@@ -1,5 +1,5 @@
 <div>
-  <form action="<%= locals?.id ? `/pokemon/${id}` : '/pokemon'%>" method="POST">
+  <form action="<%= locals?.id ? `/pokemon/${id}/edit` : '/pokemon/new'%>" method="POST">
     <%- include('text_input', {id: 'name', label: 'Name', value: locals?.pokemon?.name, required: true }) %>
     <%- include('number_input', {id: 'index', label: 'National Pokedex Index #', value: locals?.pokemon?.index, required: true }) %>
     <%- include('textarea_input', {id: 'entry', label: 'Pokedex Entry', value: locals?.pokemon?.entry }) %>

@@ -15,13 +15,13 @@ typesRouter.get('/', getAllTypes);
 
 typesRouter.get('/new', getCreateNewType);
 
-typesRouter.post('/', createType);
+typesRouter.post('/new', createType);
 
 typesRouter.get('/:id', getSpecificType);
 
 typesRouter.get('/:id/edit', getUpdateType);
 
-typesRouter.post('/:id', updateSpecificType);
+typesRouter.post('/:id/edit', updateSpecificType);
 
 typesRouter.delete('/:id', deleteSpecificType);
 
