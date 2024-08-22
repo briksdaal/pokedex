@@ -1,7 +1,7 @@
 <div>
   <form action="<%= locals?.id ? `/pokemon/${id}` : '/pokemon'%>" method="POST">
-    <%- include('text_input', {id: 'name', label: 'Name', value: locals?.pokemon?.name }) %>
-    <%- include('number_input', {id: 'index', label: 'National Pokedex Index #', value: locals?.pokemon?.index }) %>
+    <%- include('text_input', {id: 'name', label: 'Name', value: locals?.pokemon?.name, required: true }) %>
+    <%- include('number_input', {id: 'index', label: 'National Pokedex Index #', value: locals?.pokemon?.index, required: true }) %>
     <%- include('textarea_input', {id: 'entry', label: 'Pokedex Entry', value: locals?.pokemon?.entry }) %>
     <div class="flex justify-between sm:max-w-sm">
       <%- include('select_input', {id: 'type1', label: 'Type 1', value: locals?.pokemon?.type1, options: types, optionsLabel: 'type' }) %>

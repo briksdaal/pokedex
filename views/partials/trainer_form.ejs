@@ -1,6 +1,6 @@
 <div>
   <form action="<%= locals?.id ? `/trainers/${id}` : '/trainers'%>" method="POST">
-    <%- include('text_input', {id: 'name', label: 'Name', value: locals?.trainer?.name }) %>
+    <%- include('text_input', {id: 'name', label: 'Name', value: locals?.trainer?.name, required: true}) %>
     <div class="mb-8">
       <h3 class="block text-lg mb-2">Pokemon</h3>
         <div id="pokemon-select">
