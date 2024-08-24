@@ -8,7 +8,8 @@ import {
   deletePokemonTrainersByTrainerIdQuery,
   getSingleTrainerByNameQuery,
   transactionWrapper,
-  createTrainerAndSetPokemon
+  createTrainerAndSetPokemon,
+  deleteTrainerByIdQuery
 } from '../db/queries.js';
 import createHttpError from 'http-errors';
 import { body, validationResult } from 'express-validator';
@@ -191,9 +192,27 @@ export const updateSpecificTrainer = [
   })
 ];
 
-export const deleteSpecificTrainer = [
-  asyncHandler((req, res) => {
+export const getDeleteTrainer = [
+  asyncHandler(async (req, res) => {
     const { id } = req.params;
-    res.send(`Delete trainer ${id} details`);
+    const queryRes = await getSingleTrainerQuery(id);
+    const trainerName = queryRes[0].name;
+
+    const locals = {
+      title: `Delete Trainer "${trainerName}"`,
+      id,
+      name: trainerName
+    };
+
+    res.render('delete_trainer', locals);
+  })
+];
+
+export const deleteSpecificTrainer = [
+  asyncHandler(async (req, res) => {
+    const { id } = req.params;
+
+    await deleteTrainerByIdQuery(id);
+    res.redirect('/trainers');
   })
 ];

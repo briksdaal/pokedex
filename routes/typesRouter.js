@@ -6,6 +6,7 @@ import {
   createType,
   getSpecificType,
   updateSpecificType,
+  getDeleteType,
   deleteSpecificType
 } from '../controllers/typesController.js';
 
@@ -23,6 +24,8 @@ typesRouter.get('/:id/edit', getUpdateType);
 
 typesRouter.post('/:id/edit', updateSpecificType);
 
-typesRouter.delete('/:id', deleteSpecificType);
+typesRouter.get('/:id/delete', getDeleteType);
+
+typesRouter.post('/:id/delete', deleteSpecificType);
 
 export default typesRouter;

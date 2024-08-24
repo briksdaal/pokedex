@@ -6,7 +6,8 @@ import {
   getSingleTypeByTypeQuery,
   getTypeByIdAndPokemonQuery,
   createTypeQuery,
-  updateTypeQuery
+  updateTypeQuery,
+  deleteTypeByIdQuery
 } from '../db/queries.js';
 import createHttpError from 'http-errors';
 
@@ -145,9 +146,23 @@ export const updateSpecificType = [
   })
 ];
 
-export const deleteSpecificType = [
-  asyncHandler((req, res) => {
+export const getDeleteType = [
+  asyncHandler(async (req, res) => {
     const { id } = req.params;
-    res.send(`Delete type ${id} details`);
+    const queryRes = await getSingleTypeQuery(id);
+    const typeName = queryRes[0].type;
+
+    const locals = { title: `Delete Type "${typeName}"`, id, type: typeName };
+
+    res.render('delete_type', locals);
+  })
+];
+
+export const deleteSpecificType = [
+  asyncHandler(async (req, res) => {
+    const { id } = req.params;
+
+    await deleteTypeByIdQuery(id);
+    res.redirect('/types');
   })
 ];

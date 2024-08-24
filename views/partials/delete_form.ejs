@@ -1,0 +1,13 @@
+<div>
+  <form
+    action="<%= `/${locals?.objectRoute}/${locals?.id}/delete` %>"
+    method="POST"
+  >
+    <h2 class="text-2xl mb-4">
+      Are you sure you want to delete <%= locals?.objectType %> <%=
+      locals?.objectName && `"${objectName}"` %>?
+    </h2>
+    <%- include('delete_button') %>
+  </form>
+</div>
+<%- include('errors') %>

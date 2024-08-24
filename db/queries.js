@@ -33,6 +33,12 @@ function insertQuery(object, table) {
   return pool.query(q);
 }
 
+function deleteSingleByIdQuery(table, id) {
+  const q = format('DELETE FROM %I WHERE id = %L', table, id);
+
+  return pool.query(q);
+}
+
 export const getAllTypesQuery = async () => {
   const { rows } = await getAllQuery('types');
   return rows;
@@ -198,4 +204,16 @@ export const createTrainerAndSetPokemon = async (trainer, pokemonids) => {
     await pool.query('ROLLBACK');
     throw e;
   }
+};
+
+export const deleteTypeByIdQuery = (id) => {
+  return deleteSingleByIdQuery('types', id);
+};
+
+export const deletePokemonByIdQuery = (id) => {
+  return deleteSingleByIdQuery('pokemon', id);
+};
+
+export const deleteTrainerByIdQuery = (id) => {
+  return deleteSingleByIdQuery('trainers', id);
 };

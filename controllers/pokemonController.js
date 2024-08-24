@@ -7,7 +7,8 @@ import {
   updatePokemonQuery,
   getSinglePokemonQuery,
   getSinglePokemonByNameQuery,
-  getSinglePokemonByIndexQuery
+  getSinglePokemonByIndexQuery,
+  deletePokemonByIdQuery
 } from '../db/queries.js';
 import { body, validationResult, checkExact } from 'express-validator';
 import createHttpError from 'http-errors';
@@ -189,9 +190,27 @@ export const updateSpecificPokemon = [
   })
 ];
 
-export const deleteSpecificPokemon = [
-  asyncHandler((req, res) => {
+export const getDeletePokemon = [
+  asyncHandler(async (req, res) => {
     const { id } = req.params;
-    res.send(`Delete pokemon ${id} details`);
+    const queryRes = await getSinglePokemonQuery(id);
+    const pokemonName = queryRes[0].name;
+
+    const locals = {
+      title: `Delete Pokemon "${pokemonName}"`,
+      id,
+      name: pokemonName
+    };
+
+    res.render('delete_pokemon', locals);
+  })
+];
+
+export const deleteSpecificPokemon = [
+  asyncHandler(async (req, res) => {
+    const { id } = req.params;
+
+    await deletePokemonByIdQuery(id);
+    res.redirect('/pokemon');
   })
 ];
