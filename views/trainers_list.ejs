@@ -9,7 +9,7 @@
                 <a href="/trainers/<%= t.id %>" class="text-blue-600 hover:underline">
                     <div class="flex gap-2 items-center">
                         <div class="flex w-8 h-10 p-1 justify-center">
-                            <img src="<%= t.image || "/images/trainer.png" %>" alt="<%= t.image ? t.name : "trainer" %>" class="object-contain">
+                            <img src="<%= t.image || "https://res.cloudinary.com/dadnu9xkc/image/upload/v1724543191/trainer.png" %>" alt="<%= t.image ? t.name : "trainer" %>" class="object-contain">
                         </div>
                         <h3><%= t.name %></h3>
                     </div>

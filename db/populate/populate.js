@@ -1,11 +1,17 @@
+import 'dotenv/config';
 import pg from 'pg';
+import { v2 as cloudinary } from 'cloudinary';
 const { Client } = pg;
+import path from 'path';
+import { fileURLToPath } from 'url';
+
 import debug from 'debug';
 import types from './types.js';
 import pokemon from './pokemon.js';
 import trainers from './trainers.js';
 import pokemon_trainers from './pokemon_trainers.js';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const populateDebugger = debug('pokedex:populate');
 const DB_URL = process.argv[2];
 
@@ -42,6 +48,21 @@ CREATE TABLE pokemon_trainers (
     pokemon_id INTEGER REFERENCES pokemon ON DELETE CASCADE
 );
 `;
+
+async function uploadImageToCloundinary(image) {
+  const imagePath = path.join(__dirname, '../../public/', image);
+  cloudinary.config({
+    secure: true
+  });
+
+  const options = {
+    use_filename: true,
+    unique_filename: false,
+    overwrite: true
+  };
+
+  return cloudinary.uploader.upload(imagePath, options);
+}
 
 function insertFn(client, object, table) {
   const keys = Object.keys(object).join();
@@ -84,7 +105,14 @@ async function seedPokemon(client, pokemon) {
     })
   );
 
-  const pokemonQueries = pokemonPopulatedWithTypes.map((p) => {
+  const pokemonQueries = pokemonPopulatedWithTypes.map(async (p) => {
+    if (p.image) {
+      populateDebugger(`Uploading image for ${p.name}`);
+      const cloudinaryRes = await uploadImageToCloundinary(p.image);
+      p.image = cloudinaryRes.secure_url;
+      populateDebugger(`Finished image upload for ${p.name}`);
+    }
+
     populateDebugger(`Populating pokemon ${p.name}`);
     return insertFn(client, p, 'pokemon');
   });
@@ -92,7 +120,14 @@ async function seedPokemon(client, pokemon) {
 }
 
 async function seedTrainers(client, trainers) {
-  const trainersQueries = trainers.map((t) => {
+  const trainersQueries = trainers.map(async (t) => {
+    if (t.image) {
+      populateDebugger(`Uploading image for ${t.name}`);
+      const cloudinaryRes = await uploadImageToCloundinary(t.image);
+      t.image = cloudinaryRes.secure_url;
+      populateDebugger(`Finished image upload for ${t.name}`);
+    }
+
     populateDebugger(`Populating trainer ${t.name}`);
     return insertFn(client, t, 'trainers');
   });
@@ -132,23 +167,33 @@ async function seedPokemonTrainers(client, pokemonTrainers) {
 }
 
 async function main() {
-  populateDebugger('Seeding...');
-  const client = new Client({
-    connectionString: DB_URL
-  });
-  await client.connect();
-  await client.query(SQL_SETUP);
-  populateDebugger('Populating types');
-  await seedTypes(client, types);
-  populateDebugger('Finished populating types, starting pokemon');
-  await seedPokemon(client, pokemon);
-  populateDebugger('Finished populating pokemon, starting trainers');
-  await seedTrainers(client, trainers);
-  populateDebugger('Finished populating trainers, starting pokemon / trainers');
-  await seedPokemonTrainers(client, pokemon_trainers);
-  populateDebugger('Finished pokemon / trainers');
-  await client.end();
-  populateDebugger('Done');
+  try {
+    populateDebugger('Seeding...');
+    const client = new Client({
+      connectionString: DB_URL
+    });
+    await client.connect();
+    await client.query(SQL_SETUP);
+    populateDebugger('Populating types');
+    await seedTypes(client, types);
+    populateDebugger('Finished populating types, starting pokemon');
+    await seedPokemon(client, pokemon);
+    populateDebugger('Finished populating pokemon, starting trainers');
+    await seedTrainers(client, trainers);
+    populateDebugger(
+      'Finished populating trainers, starting pokemon / trainers'
+    );
+    await seedPokemonTrainers(client, pokemon_trainers);
+    populateDebugger('Finished pokemon / trainers');
+    populateDebugger('Uploading default images');
+    await uploadImageToCloundinary('/images/pokeball.png');
+    await uploadImageToCloundinary('/images/trainer.png');
+    populateDebugger('Finished default images upload');
+    await client.end();
+    populateDebugger('Done');
+  } catch (e) {
+    populateDebugger(e);
+  }
 }
 
 main();
