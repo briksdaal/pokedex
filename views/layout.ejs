@@ -18,5 +18,8 @@
       <%- body %>
     </div>
     <div><%- include('partials/footer.ejs') %></div>
+    <% if (locals?.script) { %>
+      <%- script %>
+    <% } %>
   </body>
 </html>
