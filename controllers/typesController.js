@@ -124,6 +124,16 @@ export const updateSpecificType = [
     .isHexColor()
     .withMessage('Color must be hexadecimal value')
     .escape(),
+  body('password')
+    .trim()
+    .notEmpty()
+    .withMessage('Password is required')
+    .bail()
+    .custom((value) => {
+      return value === process.env.ADMIN_PW;
+    })
+    .withMessage('Password is incorrect')
+    .escape(),
   checkExact([], { message: 'Unknown fields in request' }),
   asyncHandler(async (req, res) => {
     const { id } = req.params;

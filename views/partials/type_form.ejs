@@ -11,7 +11,24 @@
         value="<%= locals?.type?.color ? `#${type.color}` :  '#aaaa99' %>"
       />
     </div>
+    <% if (locals?.id) {%>
+      <input type="hidden" id='password' name='password'>
+    <% } %>
     <%- include('submit_button', {id: locals?.id }) %>    
   </form>
 </div>
 <%- include('errors') %>
+
+<% if (locals?.id) { %>
+  <script>
+    const form = document.querySelector('form');
+    const passwordHiddenField = document.querySelector('#password');
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const password = prompt('Enter admin password to update');
+      passwordHiddenField.value = password;
+      form.submit();
+    })
+  </script>
+<% } %>

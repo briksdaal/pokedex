@@ -9,7 +9,8 @@ import {
   getSingleTrainerByNameQuery,
   transactionWrapper,
   createTrainerAndSetPokemon,
-  deleteTrainerByIdQuery
+  deleteTrainerByIdQuery,
+  updateTrainerQuery
 } from '../db/queries.js';
 import createHttpError from 'http-errors';
 import { body, checkExact, validationResult } from 'express-validator';
@@ -153,6 +154,16 @@ export const updateSpecificTrainer = [
     })
     .escape(),
   body('pokemon.*').trim().escape(),
+  body('password')
+    .trim()
+    .notEmpty()
+    .withMessage('Password is required')
+    .bail()
+    .custom((value) => {
+      return value === process.env.ADMIN_PW;
+    })
+    .withMessage('Password is incorrect')
+    .escape(),
   checkExact([], { message: 'Unknown fields in request' }),
   asyncHandler(async (req, res) => {
     const { id } = req.params;
@@ -177,9 +188,14 @@ export const updateSpecificTrainer = [
       return res.render('create_update_trainer', locals);
     }
 
+    const trainer = { name: req.body.name };
     const pairs = req.body.pokemon.map((p) => [Number(id), Number(p)]);
 
     await transactionWrapper([
+      {
+        query: updateTrainerQuery,
+        args: [trainer, id]
+      },
       {
         query: deletePokemonTrainersByTrainerIdQuery,
         args: [id]

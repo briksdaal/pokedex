@@ -13,6 +13,9 @@
         </div>
         <button id="catch-new-btn" class="text-md rounded-md px-4 py-1 font-bold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 bg-sky-400 hover:bg-sky-300 focus-visible:outline-sky-400 disabled:bg-sky-300" type="button">Catch New Pokemon</button> 
     </div>
+    <% if (locals?.id) {%>
+      <input type="hidden" id='password' name='password'>
+    <% } %>
     <%- include('submit_button', {id: locals?.id }) %>    
   </form>
 </div>
@@ -36,5 +39,18 @@
     newElement.innerHTML = <%- JSON.stringify(include('select_pokemon', {pokemon: locals?.pokemon})) %>;
     pokemonSelectDiv.append(newElement)
   })
-
 </script>
+
+<% if (locals?.id) { %>
+  <script>
+    const form = document.querySelector('form');
+    const passwordHiddenField = document.querySelector('#password');
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const password = prompt('Enter admin password to update');
+      passwordHiddenField.value = password;
+      form.submit();
+    })
+  </script>
+<% } %>

@@ -152,6 +152,16 @@ export function updatePokemonQuery(pokemon, id) {
   return pool.query(q);
 }
 
+export function updateTrainerQuery(trainer, id) {
+  const q = format(
+    `UPDATE trainers SET name = %L WHERE id = %L`,
+    trainer.name,
+    id
+  );
+
+  return pool.query(q);
+}
+
 export const createTrainerQuery = async (body) => {
   return insertQuery(body, 'trainers');
 };
