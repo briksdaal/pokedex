@@ -12,7 +12,7 @@ import {
   deleteTrainerByIdQuery
 } from '../db/queries.js';
 import createHttpError from 'http-errors';
-import { body, validationResult } from 'express-validator';
+import { body, checkExact, validationResult } from 'express-validator';
 
 export const getAllTrainers = [
   asyncHandler(async (req, res) => {
@@ -75,6 +75,7 @@ export const createTrainer = [
     })
     .escape(),
   body('pokemon.*').trim().escape(),
+  checkExact([], { message: 'Unknown fields in request' }),
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
@@ -152,6 +153,7 @@ export const updateSpecificTrainer = [
     })
     .escape(),
   body('pokemon.*').trim().escape(),
+  checkExact([], { message: 'Unknown fields in request' }),
   asyncHandler(async (req, res) => {
     const { id } = req.params;
 
@@ -193,9 +195,14 @@ export const updateSpecificTrainer = [
 ];
 
 export const getDeleteTrainer = [
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req, res, next) => {
     const { id } = req.params;
     const queryRes = await getSingleTrainerQuery(id);
+
+    if (!queryRes.length) {
+      return next(createHttpError(404));
+    }
+
     const trainerName = queryRes[0].name;
 
     const locals = {
@@ -209,8 +216,34 @@ export const getDeleteTrainer = [
 ];
 
 export const deleteSpecificTrainer = [
+  body('password')
+    .trim()
+    .notEmpty()
+    .withMessage('Password is required')
+    .bail()
+    .custom((value) => {
+      return value === process.env.ADMIN_PW;
+    })
+    .withMessage('Password is incorrect')
+    .escape(),
+  checkExact([], { message: 'Unknown fields in request' }),
   asyncHandler(async (req, res) => {
     const { id } = req.params;
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      const queryRes = await getSingleTrainerQuery(id);
+      const name = queryRes[0].name;
+
+      const locals = {
+        title: `Delete Trainer "${name}"`,
+        id,
+        name,
+        errors: errors.array()
+      };
+
+      return res.render('delete_trainer', locals);
+    }
 
     await deleteTrainerByIdQuery(id);
     res.redirect('/trainers');

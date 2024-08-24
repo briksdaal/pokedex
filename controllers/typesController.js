@@ -10,6 +10,7 @@ import {
   deleteTypeByIdQuery
 } from '../db/queries.js';
 import createHttpError from 'http-errors';
+import 'dotenv/config';
 
 export const getAllTypes = [
   asyncHandler(async (req, res) => {
@@ -147,9 +148,14 @@ export const updateSpecificType = [
 ];
 
 export const getDeleteType = [
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req, res, next) => {
     const { id } = req.params;
     const queryRes = await getSingleTypeQuery(id);
+
+    if (!queryRes.length) {
+      return next(createHttpError(404));
+    }
+
     const typeName = queryRes[0].type;
 
     const locals = { title: `Delete Type "${typeName}"`, id, type: typeName };
@@ -159,8 +165,35 @@ export const getDeleteType = [
 ];
 
 export const deleteSpecificType = [
+  body('password')
+    .trim()
+    .notEmpty()
+    .withMessage('Password is required')
+    .bail()
+    .custom((value) => {
+      return value === process.env.ADMIN_PW;
+    })
+    .withMessage('Password is incorrect')
+    .escape(),
+  checkExact([], { message: 'Unknown fields in request' }),
   asyncHandler(async (req, res) => {
     const { id } = req.params;
+
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      const queryRes = await getSingleTypeQuery(id);
+      const typeName = queryRes[0].type;
+
+      const locals = {
+        title: `Delete Type "${typeName}"`,
+        id,
+        type: typeName,
+        errors: errors.array()
+      };
+
+      return res.render('delete_type', locals);
+    }
 
     await deleteTypeByIdQuery(id);
     res.redirect('/types');

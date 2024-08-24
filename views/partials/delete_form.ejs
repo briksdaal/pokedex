@@ -7,7 +7,20 @@
       Are you sure you want to delete <%= locals?.objectType %> <%=
       locals?.objectName && `"${objectName}"` %>?
     </h2>
+    <input type="hidden" id='password' name='password'>
     <%- include('delete_button') %>
   </form>
 </div>
 <%- include('errors') %>
+
+<script>
+  const form = document.querySelector('form');
+  const passwordHiddenField = document.querySelector('#password');
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const password = prompt('Enter admin password to delete');
+    passwordHiddenField.value = password;
+    form.submit();
+  })
+</script>

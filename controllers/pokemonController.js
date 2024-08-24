@@ -191,9 +191,14 @@ export const updateSpecificPokemon = [
 ];
 
 export const getDeletePokemon = [
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req, res, next) => {
     const { id } = req.params;
     const queryRes = await getSinglePokemonQuery(id);
+
+    if (!queryRes.length) {
+      return next(createHttpError(404));
+    }
+
     const pokemonName = queryRes[0].name;
 
     const locals = {
@@ -207,8 +212,34 @@ export const getDeletePokemon = [
 ];
 
 export const deleteSpecificPokemon = [
+  body('password')
+    .trim()
+    .notEmpty()
+    .withMessage('Password is required')
+    .bail()
+    .custom((value) => {
+      return value === process.env.ADMIN_PW;
+    })
+    .withMessage('Password is incorrect')
+    .escape(),
+  checkExact([], { message: 'Unknown fields in request' }),
   asyncHandler(async (req, res) => {
     const { id } = req.params;
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      const queryRes = await getSinglePokemonQuery(id);
+      const name = queryRes[0].name;
+
+      const locals = {
+        title: `Delete Pokemon "${name}"`,
+        id,
+        name,
+        errors: errors.array()
+      };
+
+      return res.render('delete_pokemon', locals);
+    }
 
     await deletePokemonByIdQuery(id);
     res.redirect('/pokemon');
