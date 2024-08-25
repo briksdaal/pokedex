@@ -178,8 +178,13 @@ export const updateSpecificPokemon = [
     .withMessage('Password is incorrect')
     .escape(),
   checkExact([], { message: 'Unknown fields in request' }),
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req, res, next) => {
     const { id } = req.params;
+    const queryRes = await getSinglePokemonQuery(id);
+
+    if (!queryRes.length) {
+      return next(createHttpError(404));
+    }
 
     const errors = validationResult(req);
 
@@ -233,8 +238,14 @@ export const deleteSpecificPokemon = [
     .withMessage('Password is incorrect')
     .escape(),
   checkExact([], { message: 'Unknown fields in request' }),
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req, res, next) => {
     const { id } = req.params;
+    const queryRes = await getSinglePokemonQuery(id);
+
+    if (!queryRes.length) {
+      return next(createHttpError(404));
+    }
+
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {

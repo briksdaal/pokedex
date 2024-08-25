@@ -183,12 +183,13 @@ export const updateSpecificTrainer = [
   asyncHandler(async (req, res, next) => {
     const { id } = req.params;
     const queryRes = await getSingleTrainerQuery(id);
-    const imagePath = queryRes[0].image;
-    const imagePublicId = queryRes[0].image_public_id;
 
     if (!queryRes.length) {
       return next(createHttpError(404));
     }
+
+    const imagePath = queryRes[0].image;
+    const imagePublicId = queryRes[0].image_public_id;
 
     const errors = validationResult(req);
 
@@ -283,12 +284,13 @@ export const deleteSpecificTrainer = [
   asyncHandler(async (req, res, next) => {
     const { id } = req.params;
     const queryRes = await getSingleTrainerQuery(id);
-    const name = queryRes[0].name;
-    const imagePublicId = queryRes[0].image_public_id;
 
     if (!queryRes.length) {
       return next(createHttpError(404));
     }
+
+    const name = queryRes[0].name;
+    const imagePublicId = queryRes[0].image_public_id;
 
     const errors = validationResult(req);
 

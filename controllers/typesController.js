@@ -135,8 +135,13 @@ export const updateSpecificType = [
     .withMessage('Password is incorrect')
     .escape(),
   checkExact([], { message: 'Unknown fields in request' }),
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req, res, next) => {
     const { id } = req.params;
+    const queryRes = await getSingleTypeQuery(id);
+
+    if (!queryRes.length) {
+      return next(createHttpError(404));
+    }
 
     const errors = validationResult(req);
 
@@ -186,15 +191,19 @@ export const deleteSpecificType = [
     .withMessage('Password is incorrect')
     .escape(),
   checkExact([], { message: 'Unknown fields in request' }),
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req, res, next) => {
     const { id } = req.params;
+    const queryRes = await getSingleTypeQuery(id);
+
+    if (!queryRes.length) {
+      return next(createHttpError(404));
+    }
+
+    const typeName = queryRes[0].type;
 
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      const queryRes = await getSingleTypeQuery(id);
-      const typeName = queryRes[0].type;
-
       const locals = {
         title: `Delete Type "${typeName}"`,
         id,
