@@ -20,6 +20,9 @@
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     const password = prompt('Enter admin password to delete');
+      if (password === null) {
+        return;
+      }
     passwordHiddenField.value = password;
     form.submit();
   })

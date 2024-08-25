@@ -280,14 +280,19 @@ export const deleteSpecificTrainer = [
     .withMessage('Password is incorrect')
     .escape(),
   checkExact([], { message: 'Unknown fields in request' }),
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req, res, next) => {
     const { id } = req.params;
+    const queryRes = await getSingleTrainerQuery(id);
+    const name = queryRes[0].name;
+    const imagePublicId = queryRes[0].image_public_id;
+
+    if (!queryRes.length) {
+      return next(createHttpError(404));
+    }
+
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      const queryRes = await getSingleTrainerQuery(id);
-      const name = queryRes[0].name;
-
       const locals = {
         title: `Delete Trainer "${name}"`,
         id,
@@ -298,6 +303,7 @@ export const deleteSpecificTrainer = [
       return res.render('delete_trainer', locals);
     }
 
+    await deleteImageFromCloudinary(imagePublicId);
     await deleteTrainerByIdQuery(id);
     res.redirect('/trainers');
   })
