@@ -12,6 +12,11 @@ import {
   deleteTrainerByIdQuery,
   updateTrainerQuery
 } from '../db/queries.js';
+import {
+  imageLocalUploadAndValidation,
+  uploadImageToCloudinary,
+  deleteImageFromCloudinary
+} from './helpers.js';
 import createHttpError from 'http-errors';
 import { body, checkExact, validationResult } from 'express-validator';
 
@@ -44,6 +49,7 @@ export const getUpdateTrainer = [
 
     const trainer = {
       name: queryRes[0].name,
+      image: queryRes[0].image,
       caughtPokemon: queryRes
         .map((p) => ({
           pokemon_id: p.pokemon_id
@@ -57,6 +63,7 @@ export const getUpdateTrainer = [
 ];
 
 export const createTrainer = [
+  imageLocalUploadAndValidation,
   (req, res, next) => {
     req.body.pokemon = Array.isArray(req.body.pokemon)
       ? req.body.pokemon.filter((p) => p)
@@ -100,6 +107,12 @@ export const createTrainer = [
     const trainer = { name: req.body.name };
     const pokemon = req.body.pokemon;
 
+    if (req.file) {
+      const uploadRes = await uploadImageToCloudinary(req.file);
+      trainer.image = uploadRes.secure_url;
+      trainer.image_public_id = uploadRes.public_id;
+    }
+
     await createTrainerAndSetPokemon(trainer, pokemon);
 
     res.redirect(`/trainers`);
@@ -134,6 +147,7 @@ export const getSpecificTrainer = [
 ];
 
 export const updateSpecificTrainer = [
+  imageLocalUploadAndValidation,
   (req, res, next) => {
     req.body.pokemon = Array.isArray(req.body.pokemon)
       ? req.body.pokemon.filter((p) => p)
@@ -154,6 +168,7 @@ export const updateSpecificTrainer = [
     })
     .escape(),
   body('pokemon.*').trim().escape(),
+  body('remove-image').trim().escape(),
   body('password')
     .trim()
     .notEmpty()
@@ -165,18 +180,27 @@ export const updateSpecificTrainer = [
     .withMessage('Password is incorrect')
     .escape(),
   checkExact([], { message: 'Unknown fields in request' }),
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req, res, next) => {
     const { id } = req.params;
+    const queryRes = await getSingleTrainerQuery(id);
+    const imagePath = queryRes[0].image;
+    const imagePublicId = queryRes[0].image_public_id;
+
+    if (!queryRes.length) {
+      return next(createHttpError(404));
+    }
 
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
       const pokemon = await getAllPokemonQuery();
+
       const locals = {
         title: 'Update Trainer',
         pokemon,
         trainer: {
           name: req.body.name,
+          image: imagePath,
           caughtPokemon: req.body.pokemon.map((p) => ({
             pokemon_id: Number(p)
           }))
@@ -190,6 +214,19 @@ export const updateSpecificTrainer = [
 
     const trainer = { name: req.body.name };
     const pairs = req.body.pokemon.map((p) => [Number(id), Number(p)]);
+
+    if (req.body['remove-image'] === 'on') {
+      await deleteImageFromCloudinary(imagePublicId);
+      trainer.image = '';
+    } else if (req.file) {
+      await deleteImageFromCloudinary(imagePublicId);
+      const uploadRes = await uploadImageToCloudinary(req.file);
+      trainer.image = uploadRes.secure_url;
+      trainer.image_public_id = uploadRes.public_id;
+    } else {
+      trainer.image = null;
+      trainer.image_public_id = null;
+    }
 
     await transactionWrapper([
       {

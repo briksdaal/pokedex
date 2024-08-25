@@ -50,7 +50,7 @@ export const getAllPokemonQuery = async () => {
 };
 
 export const getAllTrainersQuery = async () => {
-  const { rows } = await getAllQuery('trainers');
+  const { rows } = await getAllQuery('trainers', 'name');
   return rows;
 };
 
@@ -153,11 +153,22 @@ export function updatePokemonQuery(pokemon, id) {
 }
 
 export function updateTrainerQuery(trainer, id) {
-  const q = format(
-    `UPDATE trainers SET name = %L WHERE id = %L`,
-    trainer.name,
-    id
-  );
+  let q;
+  if (trainer.image === '') {
+    q = format(
+      `UPDATE trainers SET name = %L, image = NULL, image_public_id = NULL WHERE id = %L`,
+      trainer.name,
+      id
+    );
+  } else {
+    q = format(
+      `UPDATE trainers SET name = %L, image = COALESCE(%L, image), image_public_id = COALESCE(%L, image_public_id) WHERE id = %L`,
+      trainer.name,
+      trainer.image,
+      trainer.image_public_id,
+      id
+    );
+  }
 
   return pool.query(q);
 }

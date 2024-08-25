@@ -27,8 +27,12 @@
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       const password = prompt('Enter admin password to update');
+      if (!password) {
+        return;
+      }
       passwordHiddenField.value = password;
       form.submit();
+
     })
   </script>
 <% } %>

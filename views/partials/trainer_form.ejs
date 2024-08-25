@@ -1,6 +1,7 @@
 <div>
-  <form action="<%= locals?.id ? `/trainers/${id}/edit` : '/trainers/new'%>" method="POST">
+  <form action="<%= locals?.id ? `/trainers/${id}/edit` : '/trainers/new'%>" method="POST" enctype="multipart/form-data">
     <%- include('text_input', {id: 'name', label: 'Name', value: locals?.trainer?.name, required: true}) %>
+    <%- include('image_input', {id: 'image', label: 'Image', value: locals?.trainer?.image, update: locals?.id ? {name: locals?.trainer?.name, url: locals?.trainer?.image} : false }) %>
     <div class="mb-8">
       <h3 class="block text-lg mb-2">Pokemon</h3>
         <div id="pokemon-select">
@@ -49,6 +50,9 @@
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       const password = prompt('Enter admin password to update');
+      if (!password) {
+        return;
+      }
       passwordHiddenField.value = password;
       form.submit();
     })

@@ -34,13 +34,15 @@ CREATE TABLE pokemon (
     type1 INTEGER REFERENCES types ON DELETE SET NULL,
     type2 INTEGER REFERENCES types ON DELETE SET NULL,
     entry TEXT,
-    image TEXT
+    image TEXT,
+    image_public_id TEXT
 );
 
 CREATE TABLE trainers (
     id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     name TEXT NOT NULL,
-    image TEXT
+    image TEXT,
+    image_public_id TEXT
 );
 
 CREATE TABLE pokemon_trainers (
@@ -48,6 +50,21 @@ CREATE TABLE pokemon_trainers (
     pokemon_id INTEGER REFERENCES pokemon ON DELETE CASCADE
 );
 `;
+
+async function emptyCloudinaryFolder() {
+  let res;
+  try {
+    res = await cloudinary.api.resources_by_asset_folder('pokedex');
+  } catch (e) {
+    if (e.error.http_code === 404) {
+      return;
+    }
+  }
+
+  return Promise.all(
+    res.resources.map((r) => cloudinary.uploader.destroy(r.public_id))
+  );
+}
 
 async function uploadImageToCloundinary(image) {
   const imagePath = path.join(__dirname, '../../public/', image);
@@ -58,7 +75,8 @@ async function uploadImageToCloundinary(image) {
   const options = {
     use_filename: true,
     unique_filename: false,
-    overwrite: true
+    overwrite: true,
+    folder: 'pokedex'
   };
 
   return cloudinary.uploader.upload(imagePath, options);
@@ -110,6 +128,7 @@ async function seedPokemon(client, pokemon) {
       populateDebugger(`Uploading image for ${p.name}`);
       const cloudinaryRes = await uploadImageToCloundinary(p.image);
       p.image = cloudinaryRes.secure_url;
+      p.image_public_id = cloudinaryRes.public_id;
       populateDebugger(`Finished image upload for ${p.name}`);
     }
 
@@ -125,6 +144,7 @@ async function seedTrainers(client, trainers) {
       populateDebugger(`Uploading image for ${t.name}`);
       const cloudinaryRes = await uploadImageToCloundinary(t.image);
       t.image = cloudinaryRes.secure_url;
+      t.image_public_id = cloudinaryRes.public_id;
       populateDebugger(`Finished image upload for ${t.name}`);
     }
 
@@ -168,6 +188,8 @@ async function seedPokemonTrainers(client, pokemonTrainers) {
 
 async function main() {
   try {
+    populateDebugger('Emptying remote image bucket...');
+    await emptyCloudinaryFolder();
     populateDebugger('Seeding...');
     const client = new Client({
       connectionString: DB_URL
