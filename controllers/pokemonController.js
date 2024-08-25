@@ -10,6 +10,11 @@ import {
   getSinglePokemonByIndexQuery,
   deletePokemonByIdQuery
 } from '../db/queries.js';
+import {
+  imageLocalUploadAndValidation,
+  uploadImageToCloudinary,
+  deleteImageFromCloudinary
+} from './helpers.js';
 import { body, validationResult, checkExact } from 'express-validator';
 import createHttpError from 'http-errors';
 import { processEmptyStringsBody } from './helpers.js';
@@ -48,6 +53,7 @@ export const getUpdatePokemon = [
 ];
 
 export const createPokemon = [
+  imageLocalUploadAndValidation,
   body('name')
     .trim()
     .notEmpty()
@@ -103,6 +109,14 @@ export const createPokemon = [
       return res.render('create_update_pokemon', locals);
     }
 
+    const pokemon = req.body;
+
+    if (req.file) {
+      const uploadRes = await uploadImageToCloudinary(req.file);
+      pokemon.image = uploadRes.secure_url;
+      pokemon.image_public_id = uploadRes.public_id;
+    }
+
     await createPokemonQuery(processEmptyStringsBody(req.body));
     return res.redirect('/pokemon');
   })
@@ -125,6 +139,7 @@ export const getSpecificPokemon = [
 ];
 
 export const updateSpecificPokemon = [
+  imageLocalUploadAndValidation,
   body('name')
     .trim()
     .notEmpty()
@@ -167,6 +182,7 @@ export const updateSpecificPokemon = [
     .withMessage('Type 1 and type 2 must be different')
     .trim()
     .escape(),
+  body('remove-image').trim().escape(),
   body('password')
     .trim()
     .notEmpty()
@@ -186,6 +202,9 @@ export const updateSpecificPokemon = [
       return next(createHttpError(404));
     }
 
+    const imagePath = queryRes[0].image;
+    const imagePublicId = queryRes[0].image_public_id;
+
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -193,14 +212,29 @@ export const updateSpecificPokemon = [
       const locals = {
         title: 'Update Pokemon',
         types,
-        pokemon: req.body,
+        pokemon: { ...req.body, image: imagePath },
         id,
         errors: errors.array()
       };
       return res.render('create_update_pokemon', locals);
     }
 
-    await updatePokemonQuery(processEmptyStringsBody(req.body), id);
+    const pokemon = processEmptyStringsBody(req.body);
+
+    if (req.body['remove-image'] === 'on') {
+      await deleteImageFromCloudinary(imagePublicId);
+      pokemon.image = '';
+    } else if (req.file) {
+      await deleteImageFromCloudinary(imagePublicId);
+      const uploadRes = await uploadImageToCloudinary(req.file);
+      pokemon.image = uploadRes.secure_url;
+      pokemon.image_public_id = uploadRes.public_id;
+    } else {
+      pokemon.image = null;
+      pokemon.image_public_id = null;
+    }
+
+    await updatePokemonQuery(pokemon, id);
     return res.redirect(`/pokemon/${id}`);
   })
 ];
@@ -246,12 +280,12 @@ export const deleteSpecificPokemon = [
       return next(createHttpError(404));
     }
 
+    const name = queryRes[0].name;
+    const imagePublicId = queryRes[0].image_public_id;
+
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      const queryRes = await getSinglePokemonQuery(id);
-      const name = queryRes[0].name;
-
       const locals = {
         title: `Delete Pokemon "${name}"`,
         id,
@@ -262,6 +296,7 @@ export const deleteSpecificPokemon = [
       return res.render('delete_pokemon', locals);
     }
 
+    await deleteImageFromCloudinary(imagePublicId);
     await deletePokemonByIdQuery(id);
     res.redirect('/pokemon');
   })

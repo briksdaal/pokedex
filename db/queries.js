@@ -139,16 +139,31 @@ export const createPokemonQuery = async (body) => {
 };
 
 export function updatePokemonQuery(pokemon, id) {
-  const q = format(
-    `UPDATE pokemon SET index = %L, name = %L, type1 = %L, type2 = %L, entry = %L WHERE id = %L`,
-    pokemon.index,
-    pokemon.name,
-    pokemon.type1,
-    pokemon.type2,
-    pokemon.entry,
-    id
-  );
-
+  let q;
+  if (pokemon.image === '') {
+    q = format(
+      `UPDATE pokemon SET index = %L, name = %L, type1 = %L, type2 = %L, entry = %L, image = NULL, image_public_id = NULL WHERE id = %L`,
+      pokemon.index,
+      pokemon.name,
+      pokemon.type1,
+      pokemon.type2,
+      pokemon.entry,
+      id
+    );
+  } else {
+    q = format(
+      `UPDATE pokemon SET index = %L, name = %L, type1 = %L, type2 = %L, entry = %L, image = COALESCE(%L, image), image_public_id = COALESCE(%L, image_public_id) WHERE id = %L`,
+      pokemon.index,
+      pokemon.name,
+      pokemon.type1,
+      pokemon.type2,
+      pokemon.entry,
+      pokemon.image,
+      pokemon.image_public_id,
+      id
+    );
+  }
+  console.log(q);
   return pool.query(q);
 }
 
