@@ -1,13 +1,14 @@
 const trainers = [
   {
     name: 'Ash',
-    image: '/images/ash.jpg'
+    image: '/ash.jpg'
   },
   {
     name: 'Gary'
   },
   {
-    name: 'Misty'
+    name: 'Misty',
+    image: '/misty.png'
   }
 ];
 

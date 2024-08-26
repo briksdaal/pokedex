@@ -4,7 +4,6 @@ import { v2 as cloudinary } from 'cloudinary';
 const { Client } = pg;
 import path from 'path';
 import { fileURLToPath } from 'url';
-
 import debug from 'debug';
 import types from './types.js';
 import pokemon from './pokemon.js';
@@ -51,23 +50,35 @@ CREATE TABLE pokemon_trainers (
 );
 `;
 
-async function emptyCloudinaryFolder() {
-  let res;
-  try {
-    res = await cloudinary.api.resources_by_asset_folder('pokedex');
-  } catch (e) {
-    if (e.error.http_code === 404) {
-      return;
-    }
-  }
-
-  return Promise.all(
-    res.resources.map((r) => cloudinary.uploader.destroy(r.public_id))
-  );
+function getLocalPath(filename, dir = 'downloaded_images') {
+  return path.join(__dirname, dir, filename);
 }
 
-async function uploadImageToCloundinary(image) {
-  const imagePath = path.join(__dirname, '../../public/', image);
+async function emptyCloudinaryFolder() {
+  async function destoryImages() {
+    let res;
+    try {
+      res = await cloudinary.api.resources_by_asset_folder('pokedex');
+    } catch (e) {
+      if (e.error.http_code === 404) {
+        return;
+      }
+    }
+
+    if (res.total_count === 0) {
+      return;
+    }
+
+    await Promise.all(
+      res.resources.map((r) => cloudinary.uploader.destroy(r.public_id))
+    );
+
+    await destoryImages();
+  }
+  return destoryImages();
+}
+
+async function uploadImageToCloundinary(imagePath) {
   cloudinary.config({
     secure: true
   });
@@ -123,26 +134,33 @@ async function seedPokemon(client, pokemon) {
     })
   );
 
-  const pokemonQueries = pokemonPopulatedWithTypes.map(async (p) => {
+  for (let p of pokemonPopulatedWithTypes) {
     if (p.image) {
       populateDebugger(`Uploading image for ${p.name}`);
-      const cloudinaryRes = await uploadImageToCloundinary(p.image);
+      const filename = p.image.split('/').pop();
+
+      const cloudinaryRes = await uploadImageToCloundinary(
+        getLocalPath(filename)
+      );
       p.image = cloudinaryRes.secure_url;
       p.image_public_id = cloudinaryRes.public_id;
       populateDebugger(`Finished image upload for ${p.name}`);
     }
 
     populateDebugger(`Populating pokemon ${p.name}`);
-    return insertFn(client, p, 'pokemon');
-  });
-  return Promise.all(pokemonQueries);
+    await insertFn(client, p, 'pokemon');
+  }
+
+  return;
 }
 
 async function seedTrainers(client, trainers) {
   const trainersQueries = trainers.map(async (t) => {
     if (t.image) {
       populateDebugger(`Uploading image for ${t.name}`);
-      const cloudinaryRes = await uploadImageToCloundinary(t.image);
+      const cloudinaryRes = await uploadImageToCloundinary(
+        getLocalPath(t.image, 'local_images')
+      );
       t.image = cloudinaryRes.secure_url;
       t.image_public_id = cloudinaryRes.public_id;
       populateDebugger(`Finished image upload for ${t.name}`);
@@ -186,6 +204,13 @@ async function seedPokemonTrainers(client, pokemonTrainers) {
   return Promise.all(pokemonTrainerQueries);
 }
 
+async function uploadDefaultImages() {
+  return Promise.all([
+    uploadImageToCloundinary(getLocalPath('/pokeball.png', 'local_images')),
+    uploadImageToCloundinary(getLocalPath('/trainer.png', 'local_images'))
+  ]);
+}
+
 async function main() {
   try {
     populateDebugger('Emptying remote image bucket...');
@@ -208,8 +233,7 @@ async function main() {
     await seedPokemonTrainers(client, pokemon_trainers);
     populateDebugger('Finished pokemon / trainers');
     populateDebugger('Uploading default images');
-    await uploadImageToCloundinary('/images/pokeball.png');
-    await uploadImageToCloundinary('/images/trainer.png');
+    await uploadDefaultImages();
     populateDebugger('Finished default images upload');
     await client.end();
     populateDebugger('Done');
