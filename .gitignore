@@ -1,3 +1,6 @@
+# image downloads
+db/populate/downloaded_images/*
+
 # Logs
 logs
 *.log
