@@ -7,7 +7,7 @@ import { Readable } from 'stream';
 import { finished } from 'stream/promises';
 
 const downloadDebugger = debug('pokedex:download');
-const destinationDir = './db/populate/downloaded_images/';
+const destinationDir = './populate/downloaded_images/';
 
 async function createDirectory() {
   if (!fs.existsSync(destinationDir)) {

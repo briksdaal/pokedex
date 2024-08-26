@@ -1,5 +1,5 @@
 # image downloads
-db/populate/downloaded_images/*
+populate/downloaded_images/*
 
 # Logs
 logs

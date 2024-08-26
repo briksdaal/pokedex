@@ -18,8 +18,10 @@ Built using:
 
 ## Population Instructions
 
-To populate, first set the CLOUDINARY_URL and the DB_URL enviroment variables to your personal connection strings.
+To populate, first set the CLOUDINARY_URL enviroment variable to your personal connection string.
 
-Run db/populate/downloadImages.js from the main project folder. This will create the folder if necessary and download all pokemon images.
+Run populate/downloadImages.js from the main project folder. This will create the folder if necessary and download all pokemon images.
 
-After script completes, run db/populate/populate.js from the main project folder with your PostgreSQL connection string as an argument.
+After script completes, run populate/populate.js from the main project folder with your PostgreSQL connection string as an argument.
+
+Both scripts can be run with DEBUG=pokedex:\* to log the progress.
