@@ -58,8 +58,6 @@ export const createPokemon = [
     .trim()
     .notEmpty()
     .withMessage('Name must not be empty')
-    .isAlpha()
-    .withMessage('Name must contain only letters and no spaces')
     .custom(async (value) => {
       const { rows } = await getSinglePokemonByNameQuery(value);
 
@@ -144,8 +142,6 @@ export const updateSpecificPokemon = [
     .trim()
     .notEmpty()
     .withMessage('Name must not be empty')
-    .isAlpha()
-    .withMessage('Name must contain only letters and no spaces')
     .custom(async (value, { req }) => {
       const { id } = req.params;
       const { rows } = await getSinglePokemonByNameQuery(value);

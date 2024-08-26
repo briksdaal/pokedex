@@ -1089,7 +1089,7 @@ const pokemon = [
       'Its central core glows with the seven colors of the rainbow. Some people value the core as a gem.'
   },
   {
-    name: 'Mr.Mime',
+    name: 'Mr. Mime',
     index: '122',
     image: 'https://img.pokemondb.net/artwork/mr-mime.jpg',
     type1: 'Psychic',
