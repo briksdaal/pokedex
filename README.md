@@ -25,3 +25,5 @@ Run populate/downloadImages.js from the main project folder. This will create th
 After script completes, run populate/populate.js from the main project folder with your PostgreSQL connection string as an argument.
 
 Both scripts can be run with DEBUG=pokedex:\* to log the progress.
+
+On deployment, the necessary enviroment variables are CLOUDINARY_URL, DB_URL (PostgreSQL connection string), and ADMIN_PW.
