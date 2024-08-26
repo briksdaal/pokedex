@@ -12,8 +12,9 @@ import {
 } from '../db/queries.js';
 import {
   imageLocalUploadAndValidation,
-  uploadImageToCloudinary,
-  deleteImageFromCloudinary
+  handleFileUpload,
+  handleFileUpdate,
+  handleFileDelete
 } from './helpers.js';
 import { body, validationResult, checkExact } from 'express-validator';
 import createHttpError from 'http-errors';
@@ -93,30 +94,37 @@ export const createPokemon = [
     .trim()
     .escape(),
   checkExact([], { message: 'Unknown fields in request' }),
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      const types = await getAllTypesQuery();
-      const locals = {
-        title: 'Create New Pokemon',
-        types,
-        pokemon: req.body,
-        errors: errors.array()
-      };
-      return res.render('create_update_pokemon', locals);
+      res.locals.errors = errors.array();
+      return next();
     }
 
-    const pokemon = req.body;
+    let pokemon = req.body;
 
     if (req.file) {
-      const uploadRes = await uploadImageToCloudinary(req.file);
-      pokemon.image = uploadRes.secure_url;
-      pokemon.image_public_id = uploadRes.public_id;
+      pokemon = await handleFileUpload(pokemon, req, res);
+      if (!pokemon) {
+        return next();
+      }
     }
 
     await createPokemonQuery(processEmptyStringsBody(req.body));
+
     return res.redirect('/pokemon');
+  }),
+  // on errors, render form again
+  asyncHandler(async (req, res) => {
+    const types = await getAllTypesQuery();
+    const locals = {
+      title: 'Create New Pokemon',
+      types,
+      pokemon: req.body,
+      errors: res.locals.errors
+    };
+    return res.render('create_update_pokemon', locals);
   })
 ];
 
@@ -198,40 +206,40 @@ export const updateSpecificPokemon = [
       return next(createHttpError(404));
     }
 
-    const imagePath = queryRes[0].image;
-    const imagePublicId = queryRes[0].image_public_id;
+    res.locals.id = id;
+    res.locals.imagePath = queryRes[0].image;
+    res.locals.imagePublicId = queryRes[0].image_public_id;
 
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      const types = await getAllTypesQuery();
-      const locals = {
-        title: 'Update Pokemon',
-        types,
-        pokemon: { ...req.body, image: imagePath },
-        id,
-        errors: errors.array()
-      };
-      return res.render('create_update_pokemon', locals);
+      res.locals.errors = errors.array();
+      return next();
     }
 
-    const pokemon = processEmptyStringsBody(req.body);
+    let pokemon = processEmptyStringsBody(req.body);
 
-    if (req.body['remove-image'] === 'on') {
-      await deleteImageFromCloudinary(imagePublicId);
-      pokemon.image = '';
-    } else if (req.file) {
-      await deleteImageFromCloudinary(imagePublicId);
-      const uploadRes = await uploadImageToCloudinary(req.file);
-      pokemon.image = uploadRes.secure_url;
-      pokemon.image_public_id = uploadRes.public_id;
-    } else {
-      pokemon.image = null;
-      pokemon.image_public_id = null;
+    if (req.file || req.body?.['remove-image']) {
+      pokemon = await handleFileUpdate(pokemon, req, res);
+      if (!pokemon) {
+        return next();
+      }
     }
 
     await updatePokemonQuery(pokemon, id);
     return res.redirect(`/pokemon/${id}`);
+  }),
+  // on errors, render form again
+  asyncHandler(async (req, res) => {
+    const types = await getAllTypesQuery();
+    const locals = {
+      title: 'Update Pokemon',
+      types,
+      pokemon: { ...req.body, image: res.locals?.imagePath },
+      id: res.locals.id,
+      errors: res.locals.errors
+    };
+    return res.render('create_update_pokemon', locals);
   })
 ];
 
@@ -276,24 +284,36 @@ export const deleteSpecificPokemon = [
       return next(createHttpError(404));
     }
 
-    const name = queryRes[0].name;
+    res.locals.id = id;
+    res.locals.name = queryRes[0].name;
     const imagePublicId = queryRes[0].image_public_id;
 
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      const locals = {
-        title: `Delete Pokemon "${name}"`,
-        id,
-        name,
-        errors: errors.array()
-      };
-
-      return res.render('delete_pokemon', locals);
+      res.locals.errors = errors.array();
+      return next();
     }
 
-    await deleteImageFromCloudinary(imagePublicId);
+    if (imagePublicId) {
+      const deleteResult = await handleFileDelete(imagePublicId, res);
+      if (!deleteResult) {
+        return next();
+      }
+    }
+
     await deletePokemonByIdQuery(id);
-    res.redirect('/pokemon');
+    return res.redirect('/pokemon');
+  }),
+  // on errors, render form again
+  asyncHandler(async (req, res) => {
+    const locals = {
+      title: `Delete Pokemon "${res.locals.name}"`,
+      id: res.locals.id,
+      name: res.locals.name,
+      errors: res.locals.errors
+    };
+
+    return res.render('delete_pokemon', locals);
   })
 ];

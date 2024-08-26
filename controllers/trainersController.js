@@ -14,8 +14,9 @@ import {
 } from '../db/queries.js';
 import {
   imageLocalUploadAndValidation,
-  uploadImageToCloudinary,
-  deleteImageFromCloudinary
+  handleFileUpload,
+  handleFileUpdate,
+  handleFileDelete
 } from './helpers.js';
 import createHttpError from 'http-errors';
 import { body, checkExact, validationResult } from 'express-validator';
@@ -84,38 +85,44 @@ export const createTrainer = [
     .escape(),
   body('pokemon.*').trim().escape(),
   checkExact([], { message: 'Unknown fields in request' }),
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      const pokemon = await getAllPokemonQuery();
-      const locals = {
-        title: 'Create New Trainer',
-        pokemon,
-        trainer: {
-          name: req.body.name,
-          caughtPokemon: req.body.pokemon.map((p) => ({
-            pokemon_id: Number(p)
-          }))
-        },
-        errors: errors.array()
-      };
-
-      return res.render('create_update_trainer', locals);
+      res.locals.errors = errors.array();
+      return next();
     }
 
-    const trainer = { name: req.body.name };
+    let trainer = { name: req.body.name };
     const pokemon = req.body.pokemon;
 
     if (req.file) {
-      const uploadRes = await uploadImageToCloudinary(req.file);
-      trainer.image = uploadRes.secure_url;
-      trainer.image_public_id = uploadRes.public_id;
+      trainer = await handleFileUpload(trainer, req, res);
+      if (!trainer) {
+        return next();
+      }
     }
 
     await createTrainerAndSetPokemon(trainer, pokemon);
 
-    res.redirect(`/trainers`);
+    return res.redirect(`/trainers`);
+  }),
+  // on errors, render form again
+  asyncHandler(async (req, res) => {
+    const pokemon = await getAllPokemonQuery();
+    const locals = {
+      title: 'Create New Trainer',
+      pokemon,
+      trainer: {
+        name: req.body.name,
+        caughtPokemon: req.body.pokemon.map((p) => ({
+          pokemon_id: Number(p)
+        }))
+      },
+      errors: res.locals.errors
+    };
+
+    return res.render('create_update_trainer', locals);
   })
 ];
 
@@ -188,45 +195,25 @@ export const updateSpecificTrainer = [
       return next(createHttpError(404));
     }
 
-    const imagePath = queryRes[0].image;
-    const imagePublicId = queryRes[0].image_public_id;
+    res.locals.id = id;
+    res.locals.imagePath = queryRes[0].image;
+    res.locals.imagePublicId = queryRes[0].image_public_id;
 
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      const pokemon = await getAllPokemonQuery();
-
-      const locals = {
-        title: 'Update Trainer',
-        pokemon,
-        trainer: {
-          name: req.body.name,
-          image: imagePath,
-          caughtPokemon: req.body.pokemon.map((p) => ({
-            pokemon_id: Number(p)
-          }))
-        },
-        id,
-        errors: errors.array()
-      };
-
-      return res.render('create_update_trainer', locals);
+      res.locals.errors = errors.array();
+      return next();
     }
 
-    const trainer = { name: req.body.name };
+    let trainer = { name: req.body.name };
     const pairs = req.body.pokemon.map((p) => [Number(id), Number(p)]);
 
-    if (req.body['remove-image'] === 'on') {
-      await deleteImageFromCloudinary(imagePublicId);
-      trainer.image = '';
-    } else if (req.file) {
-      await deleteImageFromCloudinary(imagePublicId);
-      const uploadRes = await uploadImageToCloudinary(req.file);
-      trainer.image = uploadRes.secure_url;
-      trainer.image_public_id = uploadRes.public_id;
-    } else {
-      trainer.image = null;
-      trainer.image_public_id = null;
+    if (req.file || req.body?.['remove-image']) {
+      trainer = await handleFileUpdate(trainer, req, res);
+      if (!trainer) {
+        return next();
+      }
     }
 
     await transactionWrapper([
@@ -244,7 +231,27 @@ export const updateSpecificTrainer = [
       }
     ]);
 
-    res.redirect(`/trainers/${id}`);
+    return res.redirect(`/trainers/${id}`);
+  }),
+  // on errors, render form again
+  asyncHandler(async (req, res) => {
+    const pokemon = await getAllPokemonQuery();
+
+    const locals = {
+      title: 'Update Trainer',
+      pokemon,
+      trainer: {
+        name: req.body.name,
+        image: res.locals?.imagePath,
+        caughtPokemon: req.body.pokemon.map((p) => ({
+          pokemon_id: Number(p)
+        }))
+      },
+      id: res.locals.id,
+      errors: res.locals.errors
+    };
+
+    return res.render('create_update_trainer', locals);
   })
 ];
 
@@ -289,24 +296,36 @@ export const deleteSpecificTrainer = [
       return next(createHttpError(404));
     }
 
-    const name = queryRes[0].name;
+    res.locals.id = id;
+    res.locals.name = queryRes[0].name;
     const imagePublicId = queryRes[0].image_public_id;
 
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      const locals = {
-        title: `Delete Trainer "${name}"`,
-        id,
-        name,
-        errors: errors.array()
-      };
-
-      return res.render('delete_trainer', locals);
+      res.locals.errors = errors.array();
+      return next();
     }
 
-    await deleteImageFromCloudinary(imagePublicId);
+    if (imagePublicId) {
+      const deleteResult = await handleFileDelete(imagePublicId, res);
+      if (!deleteResult) {
+        return next();
+      }
+    }
+
     await deleteTrainerByIdQuery(id);
-    res.redirect('/trainers');
+    return res.redirect('/trainers');
+  }),
+  // on errors, render form again
+  asyncHandler(async (req, res) => {
+    const locals = {
+      title: `Delete Trainer "${res.locals.name}"`,
+      id: res.locals.id,
+      name: res.locals.name,
+      errors: res.locals.errors
+    };
+
+    return res.render('delete_trainer', locals);
   })
 ];

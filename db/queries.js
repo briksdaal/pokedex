@@ -163,7 +163,6 @@ export function updatePokemonQuery(pokemon, id) {
       id
     );
   }
-  console.log(q);
   return pool.query(q);
 }
 
