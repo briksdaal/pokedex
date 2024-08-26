@@ -1,4 +1,4 @@
-<h1 class="text-3xl mb-8"><%= pokemon.name %></h1>
+<h1 class="text-3xl mb-8"><%- pokemon.name %></h1>
 <div class="flex flex-col gap-4">
   <h2 class="text-xl">National Pokedex Index: #<%= pokemon.index %></h2>
   <div class="w-40 h-40">
@@ -30,7 +30,7 @@
   </div>
   <div class="flex flex-col gap-4">
     <h2 class="text-xl">Pokedex Entry</h2>
-    <p class="text-lg"><%= pokemon.entry %></p>
+    <p class="text-lg"><%- pokemon.entry %></p>
   </div>
   <div class="flex gap-8">
     <a href=<%= `/pokemon/${pokemon.id}/edit` %> class="text-blue-600 hover:underline">Edit</a>
