@@ -92,7 +92,7 @@ export const getSingleTrainerQuery = async (id) => {
 export const getTypeByIdAndPokemonQuery = async (id) => {
   const { rows } = await pool.query(
     format(
-      'SELECT types.id AS type_id, type, color, pokemon.id, name, image FROM types LEFT JOIN pokemon ON (pokemon.type1 = types.id OR pokemon.type2 = types.id) WHERE types.id = %L',
+      'SELECT types.id AS type_id, type, color, pokemon.id, name, image FROM types LEFT JOIN pokemon ON (pokemon.type1 = types.id OR pokemon.type2 = types.id) WHERE types.id = %L ORDER BY pokemon.index',
       id
     )
   );
